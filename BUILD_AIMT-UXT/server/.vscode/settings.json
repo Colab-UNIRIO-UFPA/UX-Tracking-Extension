@@ -1,4 +1,0 @@
-{
-    "appService.defaultWebAppToDeploy": "/subscriptions/302fdb05-bc57-46f1-b39e-d419a2d4948f/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/t2-uxt",
-    "appService.deploySubpath": "."
-}
