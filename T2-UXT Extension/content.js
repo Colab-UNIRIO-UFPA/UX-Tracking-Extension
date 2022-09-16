@@ -143,6 +143,7 @@ document.addEventListener('click', function (e) {
     mouse.X = e.pageX;
     mouse.Y = e.pageY;
     freeze = 0;
+    console.log(mouse.Y);
     if (typing) {
         sendMessage("keyboard");
         keyboard.Typed = "";

@@ -38,7 +38,7 @@
 		//	$txt = $metadata->time;
 		//	file_put_contents('Samples/'.$Sample.'/'.$metadata->userId.'/traceTime.txt', $txt.PHP_EOL , FILE_APPEND | LOCK_EX);
 		//}else{
-			$txt = "<rawtrace type=\"".$metadata->type."\" image=\"".$data->imageName."\" time=\"".$metadata->time."\" Class=\"".$data->Class."\" Id=\"".$data->Id."\" MouseClass=\"".$data->mouseClass."\" MouseId=\"".$data->mouseId."\" X=\"".$data->X."\" Y=\"".$data->Y."\" keys=\"".$data->Typed."\" scroll=\"".$metadata->scroll."\" height=\"".$metadata->height."\" url=\"".$metadata->url."\" />";
+			$txt = "<rawtrace type=\"".$metadata->type."\" image=\"".$data->imageName."\" time=\"".$metadata->time."\" Class=\"".$data->Class."\" Id=\"".$data->Id."\" Voice=\"".$data->typed."\" MouseClass=\"".$data->mouseClass."\" MouseId=\"".$data->mouseId."\" X=\"".$data->X."\" Y=\"".$data->Y."\" keys=\"".$data->Typed."\" scroll=\"".$metadata->scroll."\" height=\"".$metadata->height."\" url=\"".$metadata->url."\" />";
 			file_put_contents('Samples/'.$Sample.'/'.$metadata->userId.'/trace.xml', $txt.PHP_EOL , FILE_APPEND | LOCK_EX);
 			$handle = fopen('Samples/'.$Sample.'/'.$metadata->userId.'/lastTime.txt',"w");
 			$content = fwrite($handle,$metadata->time);

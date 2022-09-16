@@ -1,4 +1,4 @@
-const serverUrl = "http://lpo.ddns.net:8080/webtracer";
+const serverUrl = "http://localhost/webtracer";
 var timeInternal = 0;
 var userId = "";
 var domain = "";
@@ -13,12 +13,12 @@ chrome.runtime.onMessage.addListener(function (request, sender)
     }
     else
     {
-        capture(request.type, request.data);
+        capture(request);
     }
     //sendResponse({ farewell: "goodbye" });
 });
 var shot=5;
-function capture(type, data)
+function capture(data)
 {
     chrome.windows.getCurrent(function (win) {   
         chrome.tabs.getSelected(null, function (tab) {
@@ -27,14 +27,17 @@ function capture(type, data)
             //if(lastTime == (Math.ceil(data.Time) + timeInternal)&& ((type=="move" || type=="freeze") && //Math.ceil(data.Time) % 3 == 1)){
             //    data.imageData = "";
             //}
-            if(type=="eye"){
+            if(data.type=="eye"){
                 data.imageData = "NO";
                 //data.Time-=0.2;
-                Post(type, data);
+                Post(data.type, data);
+            }else if (data.type == "voice") {
+                data.imageData = "NO";
+                //data.time-=0.2;
             }else{
-				if((type=="move" || type=="freeze") && shot<7){
+				if((data.type=="move" || data.type=="freeze") && shot<7){
 					data.imageData = "NO";
-					Post(type, data);              
+					Post(data.type, data);              
 					shot++;
 				}
 				else{
@@ -43,7 +46,7 @@ function capture(type, data)
 					chrome.tabs.captureVisibleTab(win.id, { format: "jpeg", quality: 25 }, function (screenshotUrl)
 					{
 						data.imageData = screenshotUrl;
-						Post(type, data);
+						Post(data.type, data);
 					});
 
 				}

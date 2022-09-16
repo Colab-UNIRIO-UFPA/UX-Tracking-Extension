@@ -15,7 +15,7 @@
           "http://localhost/webtracer/calibra_webgazer_*",
           "https://localhost/webtracer/calibra_webgazer_*"
       ],
-      "js": ["jquery-3.4.1.min.js","searchgazer.js","main.js","content.js"]
+      "js": ["front.js","jquery-3.4.1.min.js","searchgazer.js","main.js","content.js","speech.js"]
     }
   ],
   "browser_action": {
