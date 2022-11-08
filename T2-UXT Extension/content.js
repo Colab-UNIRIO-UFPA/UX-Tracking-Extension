@@ -10,6 +10,15 @@ var mouse = {
     Time:0
 };
 
+var voice = {
+    Id:"",
+    Class:"",
+    X: 0,
+    Y: 0,
+    Time:0,
+    spoken: ""
+  };
+
 var eye = {
 	x: 512,
 	y: 256
@@ -143,7 +152,6 @@ document.addEventListener('click', function (e) {
     mouse.X = e.pageX;
     mouse.Y = e.pageY;
     freeze = 0;
-    console.log(mouse.Y);
     if (typing) {
         sendMessage("keyboard");
         keyboard.Typed = "";
@@ -212,6 +220,36 @@ function sendEye(x,y){
 		eye.y=Math.round(y);
 }
 
+// new instance of speech recognition
+var recognition = new webkitSpeechRecognition();
+// set params
+recognition.continuous = true;
+recognition.interimResults = false;
+recognition.lang = 'pt-BR';
+recognition.start();
+recognition.onresult = function (event) {
+
+  // delve into words detected results & get the latest
+  // total results detected
+  var resultsLength = event.results.length - 1;
+  // get length of latest results
+  var ArrayLength = event.results[resultsLength].length - 1;
+  // get last word detected
+  var saidWord = event.results[resultsLength][ArrayLength].transcript;
+  if (voice.spoken != saidWord) {
+    voice.spoken = saidWord;
+    console.log(saidWord);
+    //save_speech();
+    sendMessage("voice");
+  }
+}
+
+// speech error handling
+recognition.onerror = function (event) {
+  console.log('error?');
+  console.log(event);
+}
+
 function sendMessage(type)
 {
 		var data = {};
@@ -224,8 +262,14 @@ function sendMessage(type)
 				data.Y = Math.round(mouse.Y);
 			}
 		}
-		else
-		{   
+		else if(type == "voice"){
+            data = voice;
+            if (data.X == 0 && data.Y == 0)
+			{
+				data.X = Math.round(mouse.X);
+				data.Y = Math.round(mouse.Y);
+			}
+        } else {   
 			data = {
 				Id:mouse.Id,
 				Class:mouse.Class,
@@ -247,7 +291,7 @@ function sendMessage(type)
 		data.url = document.URL;
 		data.mouseId = overId;
 		data.mouseClass = overClass;
-		data.Typed = data.Typed.replace(/(?:\r\n|\r|\n)/g, " - ");
+		//data.Typed = data.Typed.replace(/(?:\r\n|\r|\n)/g, " - ");
 		//console.log("message send "+type);
 		chrome.runtime.sendMessage({
 			type: type,
@@ -255,3 +299,31 @@ function sendMessage(type)
 		});
 	
 }
+
+/*function sendMessage(type, voice)
+{
+		var data = {};
+		if (type == "voice")
+		{
+			data = voice;
+			if (data.X == 0 && data.Y == 0)
+			{
+				data.X = Math.round(mouse.X);
+				data.Y = Math.round(mouse.Y);
+			}
+		}
+		data.Time = WebTracer_time;
+		data.imageName="";
+		data.pageHeight = Math.round(pageHeight);
+		data.pageScroll = Math.round(document.documentElement.scrollTop);
+		data.url = document.URL;
+		data.mouseId = overId;
+		data.mouseClass = overClass;
+		//data.Typed = data.Typed.replace(/(?:\r\n|\r|\n)/g, " - ");
+		//console.log("message send "+type);
+		chrome.runtime.sendMessage({
+			type: type,
+			data: data
+		});
+	
+}*/

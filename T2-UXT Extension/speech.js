@@ -1,7 +1,17 @@
 var voice = {
+  Id:"",
+  Class:"",
+  X: 0,
+  Y: 0,
+  Time:0,
   type: "voice",
   typed: ""
 };
+
+var TICK_INTERVAL = 200;
+var pageHeight = Math.max(document.body.scrollHeight, document.body.offsetHeight);
+var webtracer_time = 0;
+//var data;
 
 // new instance of speech recognition
 var recognition = new webkitSpeechRecognition();
@@ -32,7 +42,14 @@ recognition.onerror = function (event) {
   console.log(event);
 }
 
+/*(function startTimer() {
+  setInterval(() => {
+      webtracer_time += 0.2;
+  }, TICK_INTERVAL);
+})();
+*/
+
 function save_speech(){
-  let data = voice;
-   capture(data);
+  var data = voice;
+  sendMessage(data.type, data);
 }

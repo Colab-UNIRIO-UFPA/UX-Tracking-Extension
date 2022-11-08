@@ -13,12 +13,12 @@ chrome.runtime.onMessage.addListener(function (request, sender)
     }
     else
     {
-        capture(request);
+        capture(request.type, request.data);
     }
     //sendResponse({ farewell: "goodbye" });
 });
 var shot=5;
-function capture(data)
+function capture(type, data)
 {
     chrome.windows.getCurrent(function (win) {   
         chrome.tabs.getSelected(null, function (tab) {
@@ -27,17 +27,18 @@ function capture(data)
             //if(lastTime == (Math.ceil(data.Time) + timeInternal)&& ((type=="move" || type=="freeze") && //Math.ceil(data.Time) % 3 == 1)){
             //    data.imageData = "";
             //}
-            if(data.type=="eye"){
+            if(type=="eye"){
                 data.imageData = "NO";
                 //data.Time-=0.2;
-                Post(data.type, data);
-            }else if (data.type == "voice") {
+                Post(type, data);
+            }else if(type=="voice"){
                 data.imageData = "NO";
-                //data.time-=0.2;
-            }else{
-				if((data.type=="move" || data.type=="freeze") && shot<7){
+                //data.Time-=0.2;
+                Post(type, data);
+            } else {
+				if((type=="move" || type=="freeze") && shot<7){
 					data.imageData = "NO";
-					Post(data.type, data);              
+					Post(type, data);              
 					shot++;
 				}
 				else{
@@ -46,7 +47,7 @@ function capture(data)
 					chrome.tabs.captureVisibleTab(win.id, { format: "jpeg", quality: 25 }, function (screenshotUrl)
 					{
 						data.imageData = screenshotUrl;
-						Post(data.type, data);
+						Post(type, data);
 					});
 
 				}
