@@ -260,3 +260,6 @@ __pycache__/
 *.pyc
 Videos/Geracao Mapa Calor Reuniao COLAB 21 de Fevereiro 2022.avi
 Videos/Geracao MApa Calor Reuniao COLAB 21 de Fevereiro 2022.wav
+
+# Extesion-NEXT
+node_modules
