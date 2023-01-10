@@ -1,7 +1,7 @@
    
   ![Badge](https://img.shields.io/badge/PHP-7.0-information?style=flat&logo=PHP&logoColor=white&color=777BB4![Badge])  ![Badge](https://img.shields.io/badge/framework-%204.5.2-information?style=flat&logo=.NET&logoColor=white&color=512BD4)  ![Badge](https://img.shields.io/badge/%20-5.0-information?style=flat&logo=.NET&logoColor=white&color=512BD4) ![Badge](https://img.shields.io/badge/VS%20Code-1.60-information?style=flat&logo=Visual-Studio-Code&logoColor=white&color=007ACC)
- # T2-UXT: Tracking Techniques User eXperience Tool
-Repositório destinado a abrigar o código-fonte de todas as aplicações relacionadas ao ecossistema da T2-UXT.
+ # UX-Tracking
+Repositório destinado a abrigar o código-fonte de todas as aplicações relacionadas ao ecossistema da UX-Tracking.
 
 ## Tabela de conteúdos
 
@@ -25,12 +25,11 @@ Repositório destinado a abrigar o código-fonte de todas as aplicações relaci
 📃 Para a abertura dos projetos contidos neste repositório, estabelecem-se os seguintes requisitos:
 
 *  [.NET 5](https://dotnet.microsoft.com/download/dotnet/5.0)
-*  [Servidor PHP](https://www.apachefriends.org/index.html)
 *  [Visual Studio Code](https://code.visualstudio.com/download)
 *  [Google Chrome](https://www.google.com/chrome/)
 
 ## Módulos
-A T2-UXT é constituída de 3 módulos: Cliente, Servidor de armazenamento, e visualizador. Os três módulos são responsáveis respectivamente por coletar dados de interação; organizar e armazenar; e prover formas de visualizar os dados capturados. Os módulos são descritos a seguir.
+A UX-Tracking é constituída de 3 módulos: Cliente, Servidor de armazenamento e Visualizador. Os três módulos são responsáveis respectivamente por coletar dados de interação; organizar e armazenar; e prover formas de visualizar os dados capturados. Os módulos são descritos a seguir.
 ### Cliente
 Desenvolvido como uma extensão do navegador Google Chrome utilizando Javascript, este módulo é responsável por capturar - do lado cliente - as interações dos desenvolvedores, no papel de usuários do portal, a partir das técnicas de rastreamento do mouse, do olho e do teclado, além de transcrição de fala. As versões do módulo cliente encontram-se no diretório `clients`.
 
@@ -58,10 +57,11 @@ Este componente produz um mapa de calor para o rastreamento do mouse e do olho. 
 Este componente gera uma planilha que consolida os valores das métricas utilizadas na captura das interações dos desenvolvedores. A tabela gerada pode ser exportada para utilização em outras ferramentas como, por exemplo, modelos de inteligência artificial e de classificação. 
 #### Download do estudo
 O procedimento:<br/>
-1º - Acesse o link -> https://t2uxtweb.azurewebsites.net/downloadresearch.php <br/>
-2º - Clique no botão "Criar Zip" <br/>
+1º - Faça a instalação da extensão carregando sem compactação os arquivos da pasta [T2-UXT Extension](https://github.com/Colab-UNIRIO-UFPA/UX-Tracking/tree/master/T2-UXT%20Extension) no Google Chrome <br/>
+2º - Após utilizá-la, acesse a [página](uxtracking.herokuapp.com/webtracer/downloadresearch.php) de download dos artefatos gerados.<br/>
 3º - Clique no botão "Download" <br/>
 Após os passos acima, o download do zip da pasta Samples será iniciado. <br/>
+4º - Após concluído, acesse a página [deleteresearch](uxtracking.herokuapp.com/webtracer/deleteresearch.php) para limpar o servidor. <br/>
 ## Tecnologias
 * [C#](https://docs.microsoft.com/pt-br/dotnet/csharp/)
 * [.NET 5](https://docs.microsoft.com/pt-br/dotnet/)
