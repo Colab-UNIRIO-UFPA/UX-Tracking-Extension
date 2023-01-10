@@ -1,4 +1,4 @@
-const serverUrl = "http://lpo.ddns.net:8080/webtracer";
+const serverUrl = "https://uxtracking.herokuapp.com/webtracer";
 var timeInternal = 0;
 var userId = "";
 var domain = "";
