@@ -1,4 +1,4 @@
-const serverUrl = "https://uxtracking.herokuapp.com/webtracer";
+const serverUrl = "https://uxtracking.andrepereira.eng.br";
 var timeInternal = 0;
 var userId = "";
 var domain = "";
