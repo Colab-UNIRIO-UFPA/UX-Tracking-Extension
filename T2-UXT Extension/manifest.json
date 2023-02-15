@@ -4,18 +4,18 @@
   "description": "Software de captura de dados de interacao.",
   "background": {
     "persistent": false,
-    "scripts": ["jquery-3.4.1.min.js","background.js" ]
+    "scripts": ["jquery-3.4.1.min.js", "background.js"]
   },
   "content_scripts": [
     {
-      "matches": [ "<all_urls>", "http://*/*", "https://*/*" ],
+      "matches": ["<all_urls>", "http://*/*", "https://*/*"],
       "exclude_globs": [
-          "http://*/webtracer/calibra_webgazer_*",
-          "https://*/webtracer/calibra_webgazer_*",
-          "http://localhost/webtracer/calibra_webgazer_*",
-          "https://localhost/webtracer/calibra_webgazer_*"
+        "http://*/webtracer/calibra_webgazer_*",
+        "https://*/webtracer/calibra_webgazer_*",
+        "http://localhost/webtracer/calibra_webgazer_*",
+        "https://localhost/webtracer/calibra_webgazer_*"
       ],
-      "js": ["jquery-3.4.1.min.js","searchgazer.js","main.js","content.js"]
+      "js": ["jquery-3.4.1.min.js", "searchgazer.js", "main.js", "content.js"]
     }
   ],
   "browser_action": {
