@@ -22,6 +22,10 @@
     "default_icon": "logo.png",
     "default_title": "T2-UXT Client"
   },
+  "icons": {
+    "48": "logo.png",
+    "96": "logo.png"
+  },
   "permissions": [
     "storage",
     "webNavigation",
