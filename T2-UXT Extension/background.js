@@ -5,7 +5,7 @@ var domain = "";
 var lastTime = 0;
 var fixtime=0;
 
-chrome.runtime.onMessage.addListener(function (request, sender)
+browser.runtime.onMessage.addListener(function (request, sender)
 {
     if (request.type == "solicita")
     {
@@ -20,8 +20,8 @@ chrome.runtime.onMessage.addListener(function (request, sender)
 var shot=5;
 function capture(type, data)
 {
-    chrome.windows.getCurrent(function (win) {   
-        chrome.tabs.getSelected(null, function (tab) {
+    browser.windows.getCurrent(function (win) {   
+        browser.tabs.getSelected(null, function (tab) {
             var url = new URL(tab.url);
             domain = url.hostname;
             //if(lastTime == (Math.ceil(data.Time) + timeInternal)&& ((type=="move" || type=="freeze") && //Math.ceil(data.Time) % 3 == 1)){
@@ -44,7 +44,7 @@ function capture(type, data)
 				else{
 					shot=0;
 					lastTime = data.Time + timeInternal;
-					chrome.tabs.captureVisibleTab(win.id, { format: "jpeg", quality: 25 }, function (screenshotUrl)
+					browser.tabs.captureVisibleTab(win.id, { format: "jpeg", quality: 25 }, function (screenshotUrl)
 					{
 						data.imageData = screenshotUrl;
 						Post(type, data);
@@ -99,11 +99,11 @@ function getRandomToken() {
 }
 
 function prepareSample() {
-    chrome.storage.sync.get(["userid"], function (items) {
+    browser.storage.sync.get(["userid"], function (items) {
         var loadedId = items.userid;
         function useToken(userid) {
             userId = userid;
-            chrome.tabs.getSelected(null, function (tab) {
+            browser.tabs.getSelected(null, function (tab) {
                 var url = new URL(tab.url);
                 domain = url.hostname;
                 $.post(serverUrl+"/samplechecker.php", { userId: userid, domain: domain }).done(function (data) {
@@ -115,7 +115,7 @@ function prepareSample() {
         }
         else {
             loadedId = getRandomToken();
-            chrome.storage.sync.set({ 'userid': loadedId }, function () {
+            browser.storage.sync.set({ 'userid': loadedId }, function () {
                 // Notify that we saved.
                 useToken(loadedId);
             });
@@ -129,15 +129,15 @@ function init() {
     //alert("Mouse pos "+posX+" "+posY);
 }
 
-chrome.browserAction.onClicked.addListener(function (tab) {
-    chrome.storage.sync.remove(["userid"], function(Items) {
+browser.browserAction.onClicked.addListener(function (tab) {
+    browser.storage.sync.remove(["userid"], function(Items) {
         loadedId == null;
     });
     alert('Data Cleaned.');
 });
 
-chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+browser.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     //alert("reloaded");
-    //chrome.tabs.executeScript(tabId, { file: "content.js" });
+    //browser.tabs.executeScript(tabId, { file: "content.js" });
 });
 

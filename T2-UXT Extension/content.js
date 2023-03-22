@@ -74,7 +74,7 @@ function GetScreenCordinates(obj) {
 }
 
 function startAgain() {
-    chrome.runtime.sendMessage(
+    browser.runtime.sendMessage(
         {
             type: "solicita"
         }
@@ -293,7 +293,7 @@ function sendMessage(type)
 		data.mouseClass = overClass;
 		//data.Typed = data.Typed.replace(/(?:\r\n|\r|\n)/g, " - ");
 		//console.log("message send "+type);
-		chrome.runtime.sendMessage({
+		browser.runtime.sendMessage({
 			type: type,
 			data: data
 		});
@@ -321,7 +321,7 @@ function sendMessage(type)
 		data.mouseClass = overClass;
 		//data.Typed = data.Typed.replace(/(?:\r\n|\r|\n)/g, " - ");
 		//console.log("message send "+type);
-		chrome.runtime.sendMessage({
+		browser.runtime.sendMessage({
 			type: type,
 			data: data
 		});
