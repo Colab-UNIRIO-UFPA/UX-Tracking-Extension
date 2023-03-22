@@ -1,0 +1,1 @@
+To enable the SpeechRecognition in Firefox Nightly > 72, go to about:config and switch the flags media.webspeech.recognition.enable and media.webspeech.recognition.force_enable to true.
