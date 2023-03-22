@@ -187,8 +187,8 @@ function KeyCheck(event) {
 var typing = false;
 document.onkeypress = function (e) {
     typing = true;
-    var obj = GetScreenCordinates(document.getElementById(e.target.id));
-    console.log('Press id ' + e.target.id + " pos "+ obj.x + " | "+obj.y);
+    var obj = GetScreenCordinates(e.target);
+    console.log((e.target.id ? 'Press id ' + e.target.id : '') + " pos "+ obj.x + " | "+obj.y);
     var get = window.event ? event : e;
     var key = get.keyCode ? get.keyCode : get.charCode;
     key = String.fromCharCode(key);
