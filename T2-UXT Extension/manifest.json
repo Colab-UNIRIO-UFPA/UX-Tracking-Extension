@@ -2,6 +2,11 @@
   "name": "AIMT-UXT Client",
   "version": "2.0",
   "description": "Software de captura de dados de interacao.",
+  "applications": {
+    "gecko": {
+      "id": "waves.brasil@live.com"
+    }
+  },
   "background": {
     "persistent": false,
     "scripts": ["vendor/jquery-3.4.1.min.js", "vendor/browser-polyfill-0.10.0.min.js", "vendor/searchgazer.js", "vendor/webgazer.js", "background.js"]
