@@ -105,8 +105,8 @@ console.save = function (data, filename) {
 document.onkeyup = function (e) {
   if (e.which == 27) {
     //Pressionou ESC, aqui vai a função para esta tecla.
-    console.save(Posx, "PosX.txt");
-    console.save(Posy, "PosY.txt");
-    console.save(time, "timestamps.txt"); //elapsed time in milliseconds since webgazer.begin() was called
+    if(Posx) console.save(Posx, "PosX.txt");
+    if(Posy) console.save(Posy, "PosY.txt");
+    if(time) console.save(time, "timestamps.txt"); //elapsed time in milliseconds since webgazer.begin() was called
   }
 };
