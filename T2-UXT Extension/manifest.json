@@ -1,7 +1,9 @@
 {
+  "manifest_version": 2,
   "name": "AIMT-UXT Client",
   "version": "2.0",
   "description": "Software de captura de dados de interacao.",
+  "homepage_url": "https://github.com/Colab-UNIRIO-UFPA/UX-Tracking",
   "applications": {
     "gecko": {
       "id": "waves.brasil@live.com"
@@ -25,13 +27,15 @@
   ],
   "browser_action": {
     "default_icon": "logo.png",
-    "default_title": "T2-UXT Client"
+    "default_title": "T2-UXT Client",
+    "default_popup": "popup/index.html"
   },
   "icons": {
     "48": "logo.png",
     "96": "logo.png"
   },
   "permissions": [
+    "activeTab",
     "storage",
     "webNavigation",
     "unlimitedStorage",
@@ -41,5 +45,9 @@
     "https://*/*",
     "https://*/*"
   ],
-  "manifest_version": 2
+  "web_accessible_resources": [
+    "beasts/frog.jpg",
+    "beasts/turtle.jpg",
+    "beasts/snake.jpg"
+  ]
 }
