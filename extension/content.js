@@ -266,11 +266,7 @@ browser.storage.local.get(['microphone']).then((result) => {
       }
     }
 
-    // speech error handling
-    recognition.onerror = function (event) {
-      console.log('error?')
-      console.log(event)
-    }
+    recognition.onerror = function (event) {}
   }
 })
 
