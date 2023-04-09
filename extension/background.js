@@ -1,4 +1,4 @@
-const serverUrl = 'https://uxtracking.andrepereira.eng.br'
+var serverUrl = 'https://uxtracking.andrepereira.eng.br'
 var timeInternal = 0
 var userId = ''
 var domain = ''
@@ -57,8 +57,6 @@ function Post(type, data) {
   if (fixtime < data.Time + timeInternal) {
     fixtime = data.Time + timeInternal
   }
-
-  console.log('here')
 
   $.post(serverUrl + '/receiver.php', {
     metadata: JSON.stringify({
@@ -140,8 +138,10 @@ browser.browserAction.onClicked.addListener(function (tab) {
   })
   alert('Data Cleaned.')
 })
+/*
 
 browser.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
-  //alert("reloaded");
-  //browser.tabs.executeScript(tabId, { file: "content.js" });
+  alert("reloaded");
+  browser.tabs.executeScript(tabId, { file: "content.js" });
 })
+*/

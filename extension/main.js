@@ -7,21 +7,25 @@ webgazer
   .setTracker('clmtrackr')
   .setGazeListener(function (data, clock) {
     if (data != null) {
-      //console.log(data.x,data.y);
-      //console.log(findDomElementGoogle(data.x,data.y));
+      console.log(data.x, data.y)
+      console.log(findDomElementGoogle(data.x, data.y))
       x = data.x //these x coordinates are relative to the viewport
       y = data.y //these y coordinates are relative to the viewport
       time = clock
 
       sendEye(x, y)
 
-      //Posx.push(data.x);
-      //Posy.push(data.y);
-      //time.push(clock);
+      Posx.push(data.x)
+      Posy.push(data.y)
+      time.push(clock)
     }
 
-    //   console.log(data); /* data is an object containing an x and y key which are the x and y prediction coordinates (no bounds limiting) */
-    //   console.log(clock); /* elapsed time in milliseconds since webgazer.begin() was called */
+    console.log(
+      data
+    ) /* data is an object containing an x and y key which are the x and y prediction coordinates (no bounds limiting) */
+    console.log(
+      clock
+    ) /* elapsed time in milliseconds since webgazer.begin() was called */
   })
   .begin()
 
