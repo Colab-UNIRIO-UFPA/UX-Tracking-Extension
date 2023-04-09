@@ -11,7 +11,13 @@
   },
   "background": {
     "persistent": false,
-    "scripts": ["vendor/jquery-3.4.1.min.js", "vendor/browser-polyfill-0.10.0.min.js", "vendor/searchgazer.js", "vendor/webgazer.js", "background.js"]
+    "scripts": [
+      "vendor/jquery-3.4.1.min.js",
+      "vendor/browser-polyfill-0.10.0.min.js",
+      "vendor/searchgazer.js",
+      "vendor/webgazer.js",
+      "background.js"
+    ]
   },
   "content_scripts": [
     {
@@ -22,7 +28,14 @@
         "http://localhost/webtracer/calibra_webgazer_*",
         "https://localhost/webtracer/calibra_webgazer_*"
       ],
-      "js": ["vendor/jquery-3.4.1.min.js", "vendor/browser-polyfill-0.10.0.min.js", "vendor/searchgazer.js", "vendor/webgazer.js", "main.js", "content.js"]
+      "js": [
+        "vendor/jquery-3.4.1.min.js",
+        "vendor/browser-polyfill-0.10.0.min.js",
+        "vendor/searchgazer.js",
+        "vendor/webgazer.js",
+        "main.js",
+        "content.js"
+      ]
     }
   ],
   "browser_action": {
