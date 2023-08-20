@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="../vendor/browser-polyfill-0.10.0.min.js"></script>
+    <script src="../vendor/jquery-3.4.1.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <style type="text/css">
+      #h-divider {
+        width: 100%;
+        height: 0.2rem;
+        background-color: rgba(0, 0, 0, .1);
+        border: solid rgba(0, 0, 0, .15);
+        border-width: 1px 0;
+        box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .35);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="container px-0 text-center border" id="divLogin" style="width: 250px; height: 230px;">
+        <form id="formLogin" action="http://192.168.100.41:5000/userAuth" method="POST">
+          <h1 class="h2 my-3 fw-normal" style="text-align: center;">Faça o login</h1>
+    
+          <div class="form-floating mx-4">
+            <input type="text" name="username" class="form-control" id="username" placeholder="User123Example">
+            <label for="username">Nome de usuário</label>
+          </div>
+          <div class="form-floating mx-4">
+            <input type="password" name="password" class="form-control" id="password" placeholder="Password">
+            <label for="password">Senha</label>
+          </div>
+
+          <button id="login" class="btn btn-secondary mt-2">Login</button> 
+          <p class="pb-3" style="text-align: center;"><br>
+            <a href="http://192.168.100.41:5000/forgot_pass">Esqueceu a senha?</a><br>
+            <a href="http://192.168.100.41:5000/register">Não tem uma conta?</a>
+          </p>
+        </form>
+      </div>
+      
+      <div class="container px-0 text-center border" id="mainContent" style="width: 250px; height: 230px; display: none;">
+        <div class="row align-items-center px-3 py-2">
+          <div class="col-4">
+            <img alt="Logo da extensão UX-Tracking" src="../logo.png" class="img-fluid"/>
+          </div>
+          <div class="col-8 align-middle align-self-center">
+            <span class="fs-3 lh-1 fw-bold" style="text-align: center;">UX-Tracking Extension</span>
+          </div>
+        </div>
+        <div class="b-example-divider" id="h-divider"></div>
+        <div class="row px-3 py-2">
+          <span class="fs-8 fw-lighter lh-1">Ferramenta de rastreio de múltiplas interações do usuário para avaliação de UX.</span>
+        </div>
+        <div class="b-example-divider" id="h-divider"></div>
+        
+        <div class="row px-3 py-2">
+          <div class="row px-3 pb-2">
+            <span class="fs-8 fw-bold lh-1">Interações coletadas:</span>
+          </div>
+          <form>
+            <div class="row">
+              <div class="col form-check form-switch">
+                <label class="form-check-label" for="__listen_mouse__">Mouse</label>
+                <input class="form-check-input" type="checkbox" role="switch" id="__listen_mouse__" checked>
+              </div>
+              <div class="col form-check form-switch">
+                <label class="form-check-label" for="__listen_keyboard__">Teclado</label>
+                <input class="form-check-input" type="checkbox" role="switch" id="__listen_keyboard__" checked>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col form-check form-switch">
+                <label class="form-check-label" for="__listen_microphone__">Microfone</label>
+                <input class="form-check-input" type="checkbox" role="switch" id="__listen_microphone__" checked>
+              </div>
+              <div class="col form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="__listen_camera__" checked>
+                <label class="form-check-label" for="__listen_camera__">Câmera</label>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+      <iframe src='../sandbox.html' id='sandbox' style='display: none'></iframe>
+    </main>
+    <script src="script.js"></script>
+   </body>
+</html>
