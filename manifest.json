@@ -39,5 +39,6 @@
     "scripting",
     "notifications"
   ],
-  "web_accessible_resources": []
+  "web_accessible_resources": [],
+  "host_permissions": ["<all_urls>"]
 }

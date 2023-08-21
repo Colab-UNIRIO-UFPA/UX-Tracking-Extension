@@ -37,15 +37,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
           capture(request.type, request.data);
         }
       } else {
+        // Define um timeout para evitar chamadas consecutivas de pop-up
+        isPopupPending = true;
         notification();
         console.log('User ID is not set.');
+        popupTimeout = setTimeout(function() {
+          isPopupPending = false;
+        }, 45000); // Define o tempo de espera em milissegundos
       }
       
-      // Define um timeout para evitar chamadas consecutivas de pop-up
-      isPopupPending = true;
-      popupTimeout = setTimeout(function() {
-        isPopupPending = false;
-      }, 60000); // Define o tempo de espera em milissegundos
     });
   });
 
