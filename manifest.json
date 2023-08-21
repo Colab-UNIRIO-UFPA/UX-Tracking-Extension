@@ -34,12 +34,10 @@
     "activeTab",
     "storage",
     "webNavigation",
-    "unlimitedStorage",
     "tabs",
     "contextMenus",
     "scripting",
     "notifications"
   ],
-  "web_accessible_resources": [],
-  "host_permissions": ["<all_urls>"]
+  "web_accessible_resources": []
 }

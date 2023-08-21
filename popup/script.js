@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const username = $("#username").val();
         const password = $("#password").val();
 
-        $.post("http://192.168.100.41:5000/userAuth",
+        $.post("https://uxtracking.andrepereira.eng.br/userAuth",
           {
             username: username,
             password: password
