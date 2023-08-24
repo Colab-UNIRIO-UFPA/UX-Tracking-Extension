@@ -22,32 +22,32 @@ var timeInitial = Math.round(Date.now() / 1000);
 var isPopupPending = false; // Flag para verificar se uma popup está pendente
 var popupTimeout; // Referência para o timeout
 
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     // Verifica se uma popup já está pendente, se sim, ignora esta chamada
     if (isPopupPending) {
-      return;
+        return;
     }
-    
-    chrome.storage.session.get('authToken', function(data) {
-      if (data.authToken) {
-        userId = data.authToken;
-        if (request.type == "solicita") {
-          prepareSample();
+
+    chrome.storage.session.get('authToken', function (data) {
+        if (data.authToken) {
+            userId = data.authToken;
+            if (request.type == "solicita") {
+                prepareSample();
+            } else {
+                capture(request.type, request.data);
+            }
         } else {
-          capture(request.type, request.data);
+            // Define um timeout para evitar chamadas consecutivas de pop-up
+            isPopupPending = true;
+            notification();
+            console.log('User ID is not set.');
+            popupTimeout = setTimeout(function () {
+                isPopupPending = false;
+            }, 45000); // Define o tempo de espera em milissegundos
         }
-      } else {
-        // Define um timeout para evitar chamadas consecutivas de pop-up
-        isPopupPending = true;
-        notification();
-        console.log('User ID is not set.');
-        popupTimeout = setTimeout(function() {
-          isPopupPending = false;
-        }, 45000); // Define o tempo de espera em milissegundos
-      }
-      
+
     });
-  });
+});
 
 let lastCaptureTime = 0;
 const captureInterval = 1000; // Intervalo em milissegundos entre capturas
@@ -62,31 +62,17 @@ function capture(type, data) {
             if (tabs && tabs[0] && tabs[0].url) {
                 var url = new URL(tabs[0].url);
                 domain = url.hostname;
-
-                /*
-                if(type=="eye"){
+                // Verifica se o intervalo mínimo entre capturas foi atingido
+                if (currentTime - lastCaptureTime <= captureInterval) {
+                    lastCaptureTime = currentTime; // Atualiza o último tempo de captura
+                    data.imageData = 'NO';
+                    Post(type, data);
+                } else {
                     lastTime = data.Time + timeInternal;
-                    chrome.tabs.captureVisibleTab(win.id, { format: "jpeg", quality: 25 }, function (screenshotUrl)
-                    {
+                    chrome.tabs.captureVisibleTab(win.id, { format: "jpeg", quality: 25 }, function (screenshotUrl) {
                         data.imageData = screenshotUrl;
                         Post(type, data);
                     });
-                }else
-                */
-
-                if (type != "eye" && type != "freeze") {
-                    // Verifica se o intervalo mínimo entre capturas foi atingido
-                    if (currentTime - lastCaptureTime <= captureInterval) {
-                        lastCaptureTime = currentTime; // Atualiza o último tempo de captura
-                        data.imageData = 'NO';
-                        Post(type, data);
-                    } else {
-                        lastTime = data.Time + timeInternal;
-                        chrome.tabs.captureVisibleTab(win.id, { format: "jpeg", quality: 25 }, function (screenshotUrl) {
-                            data.imageData = screenshotUrl;
-                            Post(type, data);
-                        });
-                    }
                 }
             } else {
                 console.error('Nenhuma aba ativa encontrada.');
@@ -177,26 +163,25 @@ function prepareSample() {
 
 function notification() {
     var options = {
-      type: 'basic',
-      iconUrl: 'logo.png',
-      title: 'UX-Tracking: Login necessário!',
-      message: 'Faça o login para iniciar a captura!\nClique no botão abaixo ou abra o menu da extensão.',
-      buttons: [{ title: 'Fazer login' }]
+        type: 'basic',
+        iconUrl: 'logo.png',
+        title: 'UX-Tracking: Login necessário!',
+        message: 'Faça o login para iniciar a captura!\nClique no botão abaixo ou abra o menu da extensão.',
+        buttons: [{ title: 'Fazer login' }]
     };
-    
-    chrome.notifications.create('loginNotification', options, function(notificationId) {
-      // Define um ouvinte para o clique na notificação
-      chrome.notifications.onButtonClicked.addListener(function(clickedNotificationId, buttonIndex) {
-        if (clickedNotificationId === 'loginNotification' && buttonIndex === 0) {
-          // Abre a popup da extensão quando o usuário clica no botão "Fazer Login"
-          chrome.windows.create({
-            url: 'popup/index.html', // Substitua pelo URL da sua popup HTML
-            type: 'popup',
-            width: 300,
-            height: 350
-          });
-        }
-      });
+
+    chrome.notifications.create('loginNotification', options, function (notificationId) {
+        // Define um ouvinte para o clique na notificação
+        chrome.notifications.onButtonClicked.addListener(function (clickedNotificationId, buttonIndex) {
+            if (clickedNotificationId === 'loginNotification' && buttonIndex === 0) {
+                // Abre a popup da extensão quando o usuário clica no botão "Fazer Login"
+                chrome.windows.create({
+                    url: 'popup/index.html', // Substitua pelo URL da sua popup HTML
+                    type: 'popup',
+                    width: 300,
+                    height: 350
+                });
+            }
+        });
     });
-  }
-  
+}
