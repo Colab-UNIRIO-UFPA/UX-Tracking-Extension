@@ -80,11 +80,6 @@ function tick() {
         freeze = 0
         //console.log("freeze at "+overId+" // "+overClass);
     }
-    EyeTime += 1
-    if (EyeTime > 0) {
-        sendMessage('eye')
-        EyeTime = 0
-    }
 }
 
 function startTimer(secs) {
@@ -212,7 +207,6 @@ browser.storage.sync.get(['keyboard']).then((result) => {
     }
 })
 
-var EyeTime = 0;
 
 startAgain();
 startTimer();
@@ -220,6 +214,7 @@ startTimer();
 function sendEye(x, y) {
     eye.x = Math.round(x);
     eye.y = Math.round(y);
+    sendMessage('eye')
 }
 browser.storage.sync.get(['microphone']).then((result) => {
     if (result && result.microphone) {

@@ -43,7 +43,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             console.log('User ID is not set.');
             popupTimeout = setTimeout(function () {
                 isPopupPending = false;
-            }, 45000); // Define o tempo de espera em milissegundos
+            }, 20000); // Define o tempo de espera em milissegundos
         }
 
     });

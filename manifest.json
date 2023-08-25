@@ -33,10 +33,7 @@
   "permissions": [
     "activeTab",
     "storage",
-    "webNavigation",
     "tabs",
-    "contextMenus",
-    "scripting",
     "notifications"
   ],
   "web_accessible_resources": [],
