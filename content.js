@@ -235,8 +235,8 @@ browser.storage.sync.get(['microphone']).then((result) => {
                 var ArrayLength = event.results[resultsLength].length - 1
                 // get last word detected
                 var saidWord = event.results[resultsLength][ArrayLength].transcript
-                if (voice.spoken != saidWord) {
-                    voice.spoken = saidWord
+                if (voice.Spoken != saidWord) {
+                    voice.Spoken = saidWord
                     console.log(saidWord)
                     //save_speech();
                     sendMessage('voice')

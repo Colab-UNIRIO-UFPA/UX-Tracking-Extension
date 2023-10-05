@@ -50,7 +50,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 });
 
 let lastCaptureTime = 0;
-const captureInterval = 1000; // Intervalo em milissegundos entre capturas
+const captureInterval = 2000; // Intervalo em milissegundos entre capturas
 
 function capture(type, data) {
     const currentTime = Date.now();
