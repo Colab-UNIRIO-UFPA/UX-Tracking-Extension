@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const username = $("#username").val();
         const password = $("#password").val();
 
-        $.post("https://uxtracking.andrepereira.eng.br/userAuth",
+        $.post("https://uxtracking.andrepereira.eng.br/external/userAuth",
           {
             username: username,
             password: password

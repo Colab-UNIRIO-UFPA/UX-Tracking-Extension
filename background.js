@@ -63,7 +63,7 @@ function capture(type, data) {
                 var url = new URL(tabs[0].url);
                 domain = url.hostname;
                 // Verifica se o intervalo mínimo entre capturas foi atingido
-                if (currentTime - lastCaptureTime <= captureInterval) {
+                if ((currentTime - lastCaptureTime) <= captureInterval) {
                     lastCaptureTime = currentTime; // Atualiza o último tempo de captura
                     data.imageData = 'NO';
                     Post(type, data);
