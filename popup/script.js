@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  chrome.storage.session.get('authToken', function (data) {
+  chrome.storage.sync.get('authToken', function (data) {
     if (data.authToken) {
       document.getElementById("divLogin").style.display = "none";
       document.getElementById("mainContent").style.display = "";
@@ -18,11 +18,25 @@ document.addEventListener('DOMContentLoaded', () => {
             password: password
           },
           function (authToken) {
-            chrome.storage.session.set({ "authToken": authToken.id }, function () {
-              console.log("User Authenticated!");
-            });
-            document.getElementById("divLogin").style.display = "none";
-            document.getElementById("mainContent").style.display = "";
+            if (authToken.status == 200) {
+              chrome.storage.sync.set({ "authToken": authToken.id }, function () {
+                console.log("User Authenticated!");
+              });
+              document.getElementById("divLogin").style.display = "none";
+              document.getElementById("mainContent").style.display = "";
+            }else{
+              var divExist = document.getElementById('errorLogin');
+              if (divExist) {
+                // Se a div existir, remova-a
+                divExist.parentNode.removeChild(divExist);
+              }
+              var div = document.createElement('div');
+              div.style.color = 'red';
+              div.id = 'errorLogin';
+              div.textContent = 'Verifique seu nome de usuário e senha e tente novamente';
+              var targetElement = document.getElementById('login');
+              targetElement.insertAdjacentElement('beforebegin', div);
+            }
           });
       });
     }

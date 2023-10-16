@@ -1,4 +1,4 @@
-const serverUrl = "https://uxtracking.andrepereira.eng.br";
+const serverUrl = "https://uxtracking.andrepereira.eng.br/external";
 
 // Cria um objeto Date com a data e hora atuais
 var dataHoraAtual = new Date();
@@ -28,7 +28,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         return;
     }
 
-    chrome.storage.session.get('authToken', function (data) {
+    chrome.storage.sync.get('authToken', function (data) {
         if (data.authToken) {
             userId = data.authToken;
             if (request.type == "solicita") {
