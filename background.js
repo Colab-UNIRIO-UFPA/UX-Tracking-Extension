@@ -22,6 +22,7 @@ var timeInitial = Math.round(Date.now() / 1000);
 var isPopupPending = false; // Flag para verificar se uma popup está pendente
 var popupTimeout; // Referência para o timeout
 
+
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     // Verifica se uma popup já está pendente, se sim, ignora esta chamada
     if (isPopupPending) {
@@ -31,11 +32,15 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     chrome.storage.sync.get('authToken', function (data) {
         if (data.authToken) {
             userId = data.authToken;
-            if (request.type == "solicita") {
-                prepareSample();
-            } else {
-                capture(request.type, request.data);
-            }
+            chrome.storage.sync.get(['record']).then((result) => {
+                if (result && result.record) {
+                    if (request.type == "solicita") {
+                        prepareSample();
+                    } else {
+                        capture(request.type, request.data);
+                    }
+                }
+            });
         } else {
             // Define um timeout para evitar chamadas consecutivas de pop-up
             isPopupPending = true;

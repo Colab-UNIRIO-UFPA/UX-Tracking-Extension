@@ -14,6 +14,10 @@
         border-width: 1px 0;
         box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .35);
       }
+      .check-record:checked{
+        background-color: red;
+        border-color: red;
+      }
     </style>
   </head>
   <body>
@@ -77,6 +81,16 @@
               <div class="col form-check form-switch">
                 <input class="form-check-input" type="checkbox" role="switch" id="__listen_camera__" checked>
                 <label class="form-check-label" for="__listen_camera__">Câmera</label>
+              </div>
+            </div>
+              <div class="row justify-content-center ">
+                <div class="col"></div>
+                <div class="col">
+                  <div class="form-check form-switch pt-2">
+                    <input class="form-check-input check-record" type="checkbox" role="switch" id="__listen_record__">
+                    <label class="form-check-label" for="__listen_record__">Capturar</label>
+                  </div>
+                </div>
               </div>
             </div>
           </form>
