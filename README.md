@@ -1,39 +1,46 @@
-   
-  ![Badge](https://img.shields.io/badge/PHP-7.0-information?style=flat&logo=PHP&logoColor=white&color=777BB4![Badge])  ![Badge](https://img.shields.io/badge/framework-%204.5.2-information?style=flat&logo=.NET&logoColor=white&color=512BD4)  ![Badge](https://img.shields.io/badge/%20-5.0-information?style=flat&logo=.NET&logoColor=white&color=512BD4) ![Badge](https://img.shields.io/badge/VS%20Code-1.60-information?style=flat&logo=Visual-Studio-Code&logoColor=white&color=007ACC)
- # UX-Tracking
-Repositório destinado a abrigar o código-fonte de todas as aplicações relacionadas ao ecossistema da UX-Tracking.
+# UX-Tracking: Web Extension
+Repositório da extensão web do framework [UX-Tracking: User eXperience Tracking](https://uxtracking.andrepereira.eng.br/)
 
 ## Tabela de conteúdos
 
-*  [Pre Requisitos](#pre-requisitos)
-*  [Módulos](#Módulos)
+*  [Pré Requisitos](#pré-requisitos)
+*  [Topologia](#topologia)
+*  [Ambiente de desenvolvimento](#ambiente-de-desenvolvimento)
+*  [Utilização](#utilização)
+* * [Distribuição](#distribuição)
+* * [Ambiente de desenvolvimento](#ambiente-de-desenvolvimento)
+*  [Extensão](#Extensão)
 * * [Cliente](#cliente)
 * * * [Rastreamento de mouse](#rastreamento-de-mouse)
 * * * [Rastreamento ocular](#rastreamento-ocular)
 * * * [Keylogging](#keylogging)
-* * * [Think aloud](#Transcrição-de-voz)
-* * [Armazenamento](#armazenamento)
-* * [Visualizador](#Visualizador)
-* * * [Reprodução de sessão](#reproducao-de-sessao)
-* * * [Rastreamento ocular](#rastreamento-ocular)
-* * * [Análise de métricas](#analise-de-metricas)
-* * * [Download do estudo](#download-do-estudo)
-*  [Tecnologias](#tecnologias)
+* * * [Think aloud](#Transcrição-de-voz
 
  ## Pré-requisitos
 
-📃 Para a abertura dos projetos contidos neste repositório, estabelecem-se os seguintes requisitos:
+📃 Para o desenvolvimento do projeto contido neste repositório, estabelecem-se os seguintes requisitos:
 
-*  [.NET 5](https://dotnet.microsoft.com/download/dotnet/5.0)
 *  [Visual Studio Code](https://code.visualstudio.com/download)
 *  [Google Chrome](https://www.google.com/chrome/)
 
-## Módulos
-A UX-Tracking é constituída de 3 módulos: Cliente, Servidor de armazenamento e Visualizador. Os três módulos são responsáveis respectivamente por coletar dados de interação; organizar e armazenar; e prover formas de visualizar os dados capturados. Os módulos são descritos a seguir.
-### Cliente
-Desenvolvido como uma extensão do navegador Google Chrome utilizando Javascript, este módulo é responsável por capturar - do lado cliente - as interações dos desenvolvedores, no papel de usuários do portal, a partir das técnicas de rastreamento do mouse, do olho e do teclado, além de transcrição de fala. As versões do módulo cliente encontram-se no diretório `clients`.
 
+## Topologia
 
+- [popup](https://github.com/Colab-UNIRIO-UFPA/UX-Tracking-Extension/tree/master/popup)  - `Popup exibido na extensão`
+ - index.html  - `Página html do popup`
+ - script.js - `Script do popup`
+ - styles.css - `CSS da página do popup`
+- [vendor](https://github.com/Colab-UNIRIO-UFPA/UX-Tracking-Extension/tree/master/vendor)  - `Pasta para os scripts externos utilizados na extensão`
+ - browser-polyfill-0.10.0.min.js
+ - jquery-3.4.1.min.js
+- background.js - `Script de background da extensão`
+- content.js - `Script de conteúdo da extensão`
+- logo.png - `Logo da extensão`
+- main.js - `Script main da extensão`
+- manifest.json - `Manifesto da extensão chrome`
+
+## Extensão
+Desenvolvido como uma extensão do navegador Google Chrome utilizando Javascript, esta extensão é responsável por capturar - do lado cliente - as interações dos usuários, no papel de usuários da aplicação web, a partir das técnicas de rastreamento do mouse, do olho e do teclado, além de transcrição de fala.
 #### Rastreamento de mouse
 A captura de interações do mouse contempla 4 tipos de interação:
 * Movimento
@@ -44,26 +51,4 @@ O rastreamento ocular é realizado por meio de uma versão modificada do [WebGaz
 #### Keylogging
 A extensão também pode capturar entradas de teclado, registrando a digitação de caracteres.
 #### Transcrição de voz
-Utilizando o [WebKit Voice Recognition](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition), o módulo cliente é capaz de capturar voz, transcrever e enviar como entrada de texto.
-### Armazenamento
-Desenvolvido em PHP, o módulo de armazenamento é o responsável por receber as requisições contendo dados de rastreamento de interações, e em seguida organizá-los e armazená-los. O código-fonte pode ser encontrado no diretório `server`.
-### Visualizador
-Aplicação desktop desenvolvida em C#/WPF, utilizando .NET Framework 4.5, é responsável por permitir a visualização dos dados armazenados no módulo anterior. Possui três recursos de visualização, descritos a seguir.
-#### Reprodução de sessão
-Este componente, ou submódulo, reproduz individualmente cada amostra capturada, permitindo a visualização quadro-a-quadro dos movimentos do desenvolvedor registrados a partir das técnicas de rastreamento domouse e do olho. Para a composição da visualização, o módulo utiliza captura de telas registradas durante a interação, e sobre essas posiciona pontos e linhas contínuas representando o caminho percorrido e ações realizadas pelo usuário.
-#### Mapa de calor
-Este componente produz um mapa de calor para o rastreamento do mouse e do olho. É possível a geração de mapas individuais ou de grupo de desenvolvedores. As representações são constituídas de capturas de tela sobrepostas e encontradas nos dados capturados, de forma a reproduzir a tela da aplicação. Este componente permite a detecção de áreas de interesse, desvios de atenção, zonas não visualizadas, entre outras possibilidades.
-#### Análise de métricas
-Este componente gera uma planilha que consolida os valores das métricas utilizadas na captura das interações dos desenvolvedores. A tabela gerada pode ser exportada para utilização em outras ferramentas como, por exemplo, modelos de inteligência artificial e de classificação. 
-#### Download do estudo
-O procedimento:<br/>
-1º - Faça a instalação da extensão carregando sem compactação os arquivos da pasta [T2-UXT Extension](https://github.com/Colab-UNIRIO-UFPA/UX-Tracking/tree/master/T2-UXT%20Extension) no Google Chrome <br/>
-2º - Após utilizá-la, acesse a [página](uxtracking.herokuapp.com/webtracer/downloadresearch.php) de download dos artefatos gerados.<br/>
-3º - Clique no botão "Download" <br/>
-Após os passos acima, o download do zip da pasta Samples será iniciado. <br/>
-4º - Após concluído, acesse a página [deleteresearch](uxtracking.herokuapp.com/webtracer/deleteresearch.php) para limpar o servidor. <br/>
-## Tecnologias
-* [C#](https://docs.microsoft.com/pt-br/dotnet/csharp/)
-* [.NET 5](https://docs.microsoft.com/pt-br/dotnet/)
-* [JavaScript](https://www.javascript.com/)
-* [PHP](https://php.net/)
+Utilizando o [WebKit Voice Recognition](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition), o módulo cliente é capaz de capturar voz, incluindo pausas, transcrevendo e enviando como entradas de texto.
