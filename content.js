@@ -1,7 +1,7 @@
-var pageHeight = Math.max(document.body.scrollHeight, document.body.offsetHeight);
-var overId = "";
-var overClass = "";
-var mouse = {
+let pageHeight = Math.max(document.body.scrollHeight, document.body.offsetHeight);
+let overId = "";
+let overClass = "";
+let mouse = {
     Id: "",
     Class: "",
     X: 0,
@@ -10,7 +10,7 @@ var mouse = {
     Time: 0
 };
 
-var voice = {
+let voice = {
     Id: "",
     Class: "",
     X: 0,
@@ -19,16 +19,16 @@ var voice = {
     Spoken: ""
 };
 
-var eye = {
+let eye = {
     x: 512,
     y: 256
 };
 
-var lastX = 0;
-var lastY = 0;
+let lastX = 0;
+let lastY = 0;
 
-var typing = false;
-var keyboard = {
+let typing = false;
+let keyboard = {
     Id: "",
     Class: "",
     X: 0,
@@ -36,32 +36,243 @@ var keyboard = {
     Typed: "",
     Time: 0
 };
-var lastKeyId = "";
+let lastKeyId = "";
 
-var freeze = 0;
-var WebTracer_time = 0;
+//Time variables
+const timeInterval = 200;
+let freeze = 0;
+let clocker = 0;
+let eye_tick = 0;
+let ticker;
 
-function GetScreenCordinates(obj) {
-    var p = {};
-    if (obj == null || (typeof obj == 'undefined')) {
-        p.x = 0;
-        p.y = 0;
-        return p;
+function getScreenCoordinates(obj) {
+    if (!obj) {
+        return { x: 0, y: 0 };
     }
-    p.x = obj.offsetLeft;
-    p.y = obj.offsetTop;
+    let posX = obj.offsetLeft;
+    let posY = obj.offsetTop;
     while (obj.offsetParent) {
-        p.x = p.x + obj.offsetParent.offsetLeft;
-        p.y = p.y + obj.offsetParent.offsetTop;
-        if (obj == document.getElementsByTagName("body")[0]) {
-            break;
-        }
-        else {
-            obj = obj.offsetParent;
-        }
+        posX += obj.offsetParent.offsetLeft;
+        posY += obj.offsetParent.offsetTop;
+        if (obj === document.body) break;
+        obj = obj.offsetParent;
     }
-    return p;
+    return { x: posX, y: posY };
 }
+
+
+function setupMouseListeners() {
+    document.addEventListener('mousemove', (e) => {
+        mouse.x = e.pageX;
+        mouse.y = e.pageY;
+        freeze = 0;
+        sendMessage('move');
+    });
+
+    document.addEventListener('mouseover', (e) => {
+        mouse.id = e.target.id;
+        mouse.class = e.target.className;
+        overId = e.target.id;
+        overClass = e.target.className;
+        sendMessage('mouseover');
+    });
+
+    document.addEventListener('mouseout', (e) => {
+        mouse.id = '';
+        mouse.class = '';
+        sendMessage('mouseout');
+    });
+
+    document.addEventListener('wheel', (e) => {
+        mouse.id = e.target.id;
+        mouse.class = e.target.className;
+        mouse.x = e.pageX;
+        mouse.y = e.pageY;
+        freeze = 0;
+        sendMessage('wheel');
+    });
+
+    document.addEventListener('click', (e) => {
+        mouse.id = e.target.id;
+        mouse.class = e.target.className;
+        mouse.x = e.pageX;
+        mouse.y = e.pageY;
+        freeze = 0;
+        if (typing) {
+            sendMessage('keyboard');
+            keyboard.typed = '';
+            keyboard.id = e.target.id;
+            keyboard.class = e.target.className;
+            typing = false;
+        }
+        sendMessage('click');
+    });
+}
+
+function setupKeyboardListeners() {
+    document.addEventListener('keydown', (e) => {
+        const keyID = e.keyCode;
+        let actionTaken = false;
+        if (keyID === 8 || keyID === 46) { // backspace or delete
+            keyboard.typed = keyboard.typed.slice(0, -1);
+            actionTaken = true;
+        } else if (keyID === 13) { // enter
+            sendMessage('keyboard');
+            keyboard.typed = '';
+            keyboard.id = e.target.id;
+            keyboard.class = e.target.className;
+            actionTaken = true;
+        }
+        if (actionTaken) {
+            const obj = getScreenCoordinates(e.target);
+            keyboard.x = Math.round(obj.x);
+            keyboard.y = Math.round(obj.y);
+            sendMessage('keydown');
+        }
+    });
+
+    document.addEventListener('keypress', (e) => {
+        typing = true;
+        const obj = getScreenCoordinates(e.target);
+        const char = String.fromCharCode(e.which);
+        keyboard.typed += char;
+
+        if (e.target.id !== keyboard.id) {
+            sendMessage('keyboard');
+            keyboard.typed = char; // Começa um novo texto digitado
+            keyboard.id = e.target.id;
+            keyboard.class = e.target.className;
+        }
+
+        keyboard.x = Math.round(obj.x);
+        keyboard.y = Math.round(obj.y);
+        sendMessage('keypress');
+    });
+}
+
+function setupWebGazerVideo() {
+    var video = document.getElementById('webgazerVideoFeed');
+    if (video) {
+        video.style.display = 'none';
+        video.style.position = 'absolute';
+        video.style.top = topDist;
+        video.style.left = leftDist;
+        video.width = width;
+        video.height = height;
+        video.style.margin = '0px';
+
+        webgazer.params.imgWidth = width;
+        webgazer.params.imgHeight = height;
+    } else {
+        chrome.runtime.sendMessage({
+            type: "error",
+            message: 'Elemento de vídeo do WebGazer não encontrado.'
+          }, function(response) {
+            console.log(response.message);
+          });
+    }
+}
+
+function setupMicrophoneListeners() {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(function(stream) {
+            // Cria uma nova instância de reconhecimento de voz
+            const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+            let recognition = new SpeechRecognition();
+
+            // Define parâmetros
+            recognition.continuous = true;
+            recognition.interimResults = false;
+            recognition.lang = 'pt-BR';
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                // Processa os resultados detectados e obtém a última palavra falada
+                let resultsLength = event.results.length - 1;
+                let arrayLength = event.results[resultsLength].length - 1;
+                let saidWord = event.results[resultsLength][arrayLength].transcript;
+
+                if (voice.Spoken !== saidWord) {
+                    voice.Spoken = saidWord;
+                    chrome.runtime.sendMessage({
+                        type: "log",
+                        message: saidWord
+                      }, function(response) {
+                        console.log(response.message);
+                      });
+                    sendMessage('voice', saidWord); // Envia a palavra falada
+                }
+            };
+
+            recognition.onerror = function(event) {
+                chrome.runtime.sendMessage({
+                    type: "error",
+                    message: "Erro no reconhecimento de voz"
+                  }, function(response) {
+                    console.log(response.message);
+                  });
+            };
+        }).catch((error) => {
+            chrome.runtime.sendMessage({
+                type: "error",
+                message: "Erro ao acessar o microfone"
+              }, function(response) {
+                console.log(response.message);
+              });
+        });
+}
+
+
+function setupEventListeners() {
+    browser.storage.sync.get(['mouse']).then((result) => {
+        if (result.mouse) {
+            setupMouseListeners();
+        }
+    });
+
+    browser.storage.sync.get(['keyboard']).then((result) => {
+        if (result.keyboard) {
+            setupKeyboardListeners();
+        }
+    });
+
+    browser.storage.sync.get(['camera']).then((result) => {
+        if (result.camera) {
+            webgazer.begin().then(function() {
+                setupWebGazerVideo();
+            });
+        } else {
+            chrome.runtime.sendMessage({
+                type: "error",
+                error: "CameraDisabled",
+                message: "Câmera desabilitada ou não acessível, verifique as configurações do sistema."
+              }, function(response) {
+                console.log(response.message);
+              });
+        }
+    });
+
+    browser.storage.sync.get(['microphone']).then((result) => {
+        if (result.microphone) {
+            setupMicrophoneListeners();
+        } else {
+            chrome.runtime.sendMessage({
+                type: "error",
+                message: "Microfone desabilitado nas configurações ou reconhecimento de voz não suportado neste navegador."
+              }, function(response) {
+                console.log(response.message);
+              });
+        }
+    });
+}
+
+function initializeExtension() {
+    setupEventListeners();
+    startAgain();
+    startTimer();
+}
+
+/////////////////////////////////////////////////
 
 function startAgain() {
     chrome.runtime.sendMessage(
@@ -72,181 +283,32 @@ function startAgain() {
 }
 
 function tick() {
-    ////console.log(WebTracer_time);
-    freeze += 0.5
-    WebTracer_time += 0.2
-    if (freeze == 1) {
+    ////console.log(clocker);
+    freeze += timeInterval/1000
+    clocker += timeInterval/1000
+    eye_tick += timeInterval/1000
+    if (freeze >= 1) {
         sendMessage('freeze')
         freeze = 0
-        //console.log("freeze at "+overId+" // "+overClass);
     }
-}
 
-function startTimer(secs) {
-    secTime = parseInt(secs)
-    ticker = setInterval(tick, 200)
-}
-
-browser.storage.sync.get(['mouse']).then((result) => {
-    if (result && result.mouse) {
-        document.addEventListener('mousemove', function (e) {
-            mouse.X = e.pageX
-            mouse.Y = e.pageY
-            freeze = 0
-            sendMessage('move')
-            if (typing) {
-                sendMessage('keyboard')
-                keyboard.Typed = ''
-                keyboard.Id = e.target.id
-                keyboard.Class = e.target.className
-                typing = false
-            }
-        })
-
-        document.addEventListener('mouseover', function (e) {
-            mouse.Id = e.target.id
-            mouse.Class = e.target.className
-        })
-
-        document.addEventListener('mouseout', function (e) {
-            mouse.Id = ''
-            mouse.Class = ''
-        })
-
-        document.addEventListener('wheel', function (e) {
-            mouse.Id = e.target.id
-            mouse.Class = e.target.className
-            //console.log("wheel " + e.pageX + " | " + e.pageY);
-            mouse.X = e.pageX
-            mouse.Y = e.pageY
-            freeze = 0
-            sendMessage('wheel')
-        })
-
-        $(window).on('navigate', function (event, data) {
-            var direction = data.state.direction
-            sendMessage(direction)
-            //back, forward
-        })
-
-        document.addEventListener('click', function (e) {
-            mouse.Id = e.target.id
-            mouse.Class = e.target.className
-            //console.log("click " + e.pageX + " | " + e.pageY);
-            mouse.X = e.pageX
-            mouse.Y = e.pageY
-            freeze = 0
-            if (typing) {
-                sendMessage('keyboard')
-                keyboard.Typed = ''
-                keyboard.Id = e.target.id
-                keyboard.Class = e.target.className
-                typing = false
-            }
-            sendMessage('click')
-        })
-    }
-})
-
-browser.storage.sync.get(['keyboard']).then((result) => {
-    if (result && result.keyboard) {
-        document.addEventListener('keydown', KeyCheck)
-        function KeyCheck(event) {
-            var KeyID = event.keyCode
-            switch (KeyID) {
-                case 8:
-                    //backspace
-                    keyboard.Typed = keyboard.Typed.slice(0, -1)
-                    break
-                case 46:
-                    //delete
-                    keyboard.Typed += '-!-'
-                    break
-                case 13:
-                    sendMessage('keyboard')
-                    keyboard.Typed = ''
-                    keyboard.Id = e.target.id
-                    keyboard.Class = e.target.className
-                    break
-                default:
-                    break
-            }
+    if (eye_tick >= 1) {
+        eye_tick = 0;
+        var prediction = webgazer.getCurrentPrediction();
+        if (prediction) {
+            var x = prediction.x;
+            var y = prediction.y;
+            eye.x = Math.round(x);
+            eye.y = Math.round(y);
+            sendMessage('eye')
         }
-
-        document.onkeypress = function (e) {
-            typing = true
-            var obj = GetScreenCordinates(e.target)
-            console.log(
-                (e.target.id ? 'Press id ' + e.target.id : '') +
-                ' pos ' +
-                obj.x +
-                ' | ' +
-                obj.y
-            )
-            var get = window.event ? event : e
-            var key = get.keyCode ? get.keyCode : get.charCode
-            key = String.fromCharCode(key)
-            if (e.target.id != keyboard.Id) {
-                sendMessage('keyboard')
-                keyboard.Typed = ''
-                keyboard.Id = e.target.id
-                keyboard.Class = e.target.className
-            } else {
-                keyboard.X = Math.round(obj.x)
-                keyboard.Y = Math.round(obj.y)
-            }
-            keyboard.Typed += key
-            keyboard.Typed.replace(/(?:\r\n|\r|\n)/g, ' - ')
-            console.log(keyboard.Typed)
-        }
-
-        $(document).mouseover(function (e) {
-            overId = e.target.id
-            overClass = e.target.className
-        })
     }
-})
-
-
-startAgain();
-startTimer();
-
-function sendEye(x, y) {
-    eye.x = Math.round(x);
-    eye.y = Math.round(y);
-    sendMessage('eye')
 }
-browser.storage.sync.get(['microphone']).then((result) => {
-    if (result && result.microphone) {
-        navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(function(stream) {
-            // new instance of speech recognition
-            var recognition = new webkitSpeechRecognition()
-            // set params
-            recognition.continuous = true
-            recognition.interimResults = false
-            recognition.lang = 'pt-BR'
-            recognition.start()
-            recognition.onresult = function (event) {
-                // delve into words detected results & get the latest
-                // total results detected
-                var resultsLength = event.results.length - 1
-                // get length of latest results
-                var ArrayLength = event.results[resultsLength].length - 1
-                // get last word detected
-                var saidWord = event.results[resultsLength][ArrayLength].transcript
-                if (voice.Spoken != saidWord) {
-                    voice.Spoken = saidWord
-                    console.log(saidWord)
-                    //save_speech();
-                    sendMessage('voice')
-                }
-            }
 
-            recognition.onerror = function (event) { }
-        });
-    }
-})
+function startTimer() {
+    ticker = setInterval(tick, timeInterval)
+}
+
 
 function sendMessage(type) {
     var data = {};
@@ -276,7 +338,7 @@ function sendMessage(type) {
             data.Y = Math.round(eye.y);
         }
     }
-    data.Time = WebTracer_time;
+    data.Time = clocker;
     data.imageName = "";
     data.pageHeight = Math.round(pageHeight);
     data.pageScroll = Math.round(document.documentElement.scrollTop);
@@ -291,3 +353,5 @@ function sendMessage(type) {
     });
 
 }
+
+initializeExtension();

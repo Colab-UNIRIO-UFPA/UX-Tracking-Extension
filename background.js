@@ -21,14 +21,13 @@ var timeInitial = Math.round(Date.now() / 1000);
 
 var isPopupPending = false; // Flag para verificar se uma popup está pendente
 var popupTimeout; // Referência para o timeout
+var popupInterval = 0;
 
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    // Verifica se uma popup já está pendente, se sim, ignora esta chamada
-    if (isPopupPending) {
-        return;
-    }
-
+    function updateInterval() {
+        popupInterval += 1000;
+      }
     chrome.storage.sync.get('authToken', function (data) {
         if (data.authToken) {
             userId = data.authToken;
@@ -42,13 +41,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                 }
             });
         } else {
-            // Define um timeout para evitar chamadas consecutivas de pop-up
-            isPopupPending = true;
-            notification();
-            console.log('User ID is not set.');
-            popupTimeout = setTimeout(function () {
-                isPopupPending = false;
-            }, 20000); // Define o tempo de espera em milissegundos
+            if (popupInterval >= 30000) {
+                notification();
+                console.log('User ID is not set.');
+            }
+            setInterval(updateInterval(), 1000)
         }
 
     });
@@ -190,3 +187,16 @@ function notification() {
         });
     });
 }
+
+//comunicação com content.js
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+      if (request.type === "error") {
+        console.error(`Erro recebido: ${request.message}`);
+      }
+      if (request.type === "log") {
+        console.error(`Log recebido: ${request.message}`);
+      }
+      return true;
+    }
+  );
