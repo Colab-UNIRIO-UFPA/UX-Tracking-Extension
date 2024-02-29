@@ -27,7 +27,6 @@ let eye = {
 let lastX = 0;
 let lastY = 0;
 
-let typing = false;
 let keyboard = {
     Id: "",
     Class: "",
@@ -63,31 +62,17 @@ function getScreenCoordinates(obj) {
 
 function setupMouseListeners() {
     document.addEventListener('mousemove', (e) => {
-        mouse.x = e.pageX;
-        mouse.y = e.pageY;
+        mouse.X = e.pageX;
+        mouse.Y = e.pageY;
         freeze = 0;
         sendMessage('move');
-    });
-
-    document.addEventListener('mouseover', (e) => {
-        mouse.id = e.target.id;
-        mouse.class = e.target.className;
-        overId = e.target.id;
-        overClass = e.target.className;
-        sendMessage('mouseover');
-    });
-
-    document.addEventListener('mouseout', (e) => {
-        mouse.id = '';
-        mouse.class = '';
-        sendMessage('mouseout');
     });
 
     document.addEventListener('wheel', (e) => {
         mouse.id = e.target.id;
         mouse.class = e.target.className;
-        mouse.x = e.pageX;
-        mouse.y = e.pageY;
+        mouse.X = e.pageX;
+        mouse.Y = e.pageY;
         freeze = 0;
         sendMessage('wheel');
     });
@@ -95,58 +80,49 @@ function setupMouseListeners() {
     document.addEventListener('click', (e) => {
         mouse.id = e.target.id;
         mouse.class = e.target.className;
-        mouse.x = e.pageX;
-        mouse.y = e.pageY;
+        mouse.X = e.pageX;
+        mouse.Y = e.pageY;
         freeze = 0;
-        if (typing) {
-            sendMessage('keyboard');
-            keyboard.typed = '';
-            keyboard.id = e.target.id;
-            keyboard.class = e.target.className;
-            typing = false;
-        }
         sendMessage('click');
     });
 }
 
 function setupKeyboardListeners() {
     document.addEventListener('keydown', (e) => {
-        const keyID = e.keyCode;
+        const keyID = e.key;
         let actionTaken = false;
-        if (keyID === 8 || keyID === 46) { // backspace or delete
-            keyboard.typed = keyboard.typed.slice(0, -1);
+        if (e.key === 'Delete' || e.key === 'Backspace') { // backspace or delete
+            keyboard.Typed = keyboard.typed.slice(0, -1);
             actionTaken = true;
-        } else if (keyID === 13) { // enter
+        } else if (e.key === 'Enter') { // enter
             sendMessage('keyboard');
-            keyboard.typed = '';
+            keyboard.Typed = '';
             keyboard.id = e.target.id;
             keyboard.class = e.target.className;
             actionTaken = true;
         }
         if (actionTaken) {
             const obj = getScreenCoordinates(e.target);
-            keyboard.x = Math.round(obj.x);
-            keyboard.y = Math.round(obj.y);
-            sendMessage('keydown');
+            keyboard.X = Math.round(obj.x);
+            keyboard.Y = Math.round(obj.y);
+            sendMessage('keyboard');
         }
     });
 
     document.addEventListener('keypress', (e) => {
-        typing = true;
         const obj = getScreenCoordinates(e.target);
-        const char = String.fromCharCode(e.which);
-        keyboard.typed += char;
+        const char = e.key;
+        keyboard.Typed += char;
 
         if (e.target.id !== keyboard.id) {
             sendMessage('keyboard');
-            keyboard.typed = char; // Começa um novo texto digitado
+            keyboard.Typed = char; // Começa um novo texto digitado
             keyboard.id = e.target.id;
             keyboard.class = e.target.className;
         }
 
-        keyboard.x = Math.round(obj.x);
-        keyboard.y = Math.round(obj.y);
-        sendMessage('keypress');
+        keyboard.X = Math.round(obj.x);
+        keyboard.Y = Math.round(obj.y);
     });
 }
 
@@ -272,8 +248,6 @@ function initializeExtension() {
     startTimer();
 }
 
-/////////////////////////////////////////////////
-
 function startAgain() {
     chrome.runtime.sendMessage(
         {
@@ -294,14 +268,16 @@ function tick() {
 
     if (eye_tick >= 1) {
         eye_tick = 0;
-        var prediction = webgazer.getCurrentPrediction();
-        if (prediction) {
-            var x = prediction.x;
-            var y = prediction.y;
-            eye.x = Math.round(x);
-            eye.y = Math.round(y);
+        webgazer.setGazeListener(function(data, elapsedTime) {
+            if (data == null) {
+                return;
+            }
+            var xprediction = data.x; //these x coordinates are relative to the viewport
+            var yprediction = data.y; //these y coordinates are relative to the viewport
+            eye.x = Math.round(xprediction);
+            eye.y = Math.round(yprediction);
             sendMessage('eye')
-        }
+        }).begin();
     }
 }
 
