@@ -27,7 +27,7 @@ var popupInterval = 0;
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     function updateInterval() {
         popupInterval += 1000;
-      }
+    }
     chrome.storage.sync.get('authToken', function (data) {
         if (data.authToken) {
             userId = data.authToken;
@@ -35,6 +35,16 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                 if (result && result.record) {
                     if (request.type == "solicita") {
                         prepareSample();
+                    } else if (request.type == "inferencia") {
+                        sendFace(request.data).then(responseData => {
+                            sendResponse({success: true, type: request.type, data: responseData});
+                        });
+                    } else if (request.type === "error") {
+                        console.error(`Erro recebido: ${request.message}`);
+                        return true;
+                    } else if (request.type === "log") {
+                        console.error(`Log recebido: ${request.message}`);
+                        return true;
                     } else {
                         capture(request.type, request.data);
                     }
@@ -52,7 +62,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 });
 
 let lastCaptureTime = 0;
-const captureInterval = 2000; // Intervalo em milissegundos entre capturas
+const captureInterval = 4000; // Intervalo em milissegundos entre capturas
 
 function capture(type, data) {
     const currentTime = Date.now();
@@ -116,6 +126,26 @@ async function Post(type, data) {
         }
     } catch (error) {
         console.error(type + " An error occurred:", error);
+    }
+}
+
+async function sendFace(image) {
+    try {
+        const response = await fetch(`${serverUrl}/faceExpression`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: new URLSearchParams({
+                data: image
+            })
+        });
+
+        const responseData = await response.text();
+        return responseData;
+    } catch (error) {
+        console.error(" An error occurred:", error);
+        throw error;
     }
 }
 
@@ -187,16 +217,3 @@ function notification() {
         });
     });
 }
-
-//comunicação com content.js
-chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse) {
-      if (request.type === "error") {
-        console.error(`Erro recebido: ${request.message}`);
-      }
-      if (request.type === "log") {
-        console.error(`Log recebido: ${request.message}`);
-      }
-      return true;
-    }
-  );

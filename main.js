@@ -22045,18 +22045,6 @@ var height = 240;
 var topDist = '0px';
 var leftDist = '0px';
 
-
-function checkIfReady() {
-    if (webgazer.isReady()) {
-        setup();
-    } else {
-        setTimeout(checkIfReady, 200);
-    }
-}
-
-setTimeout(checkIfReady,200);
-
-
 window.onbeforeunload = function() {
     webgazer.end();
 };

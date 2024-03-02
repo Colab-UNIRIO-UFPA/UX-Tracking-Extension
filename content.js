@@ -24,9 +24,6 @@ let eye = {
     y: 256
 };
 
-let lastX = 0;
-let lastY = 0;
-
 let keyboard = {
     Id: "",
     Class: "",
@@ -35,13 +32,29 @@ let keyboard = {
     Typed: "",
     Time: 0
 };
-let lastKeyId = "";
+
+let emotion = {
+    Id: "",
+    Class: "",
+    X: 0,
+    Y: 0,
+    Time: 0,
+    anger: 0,
+    contempt: 0, 
+    disgust: 0, 
+    fear: 0, 
+    happy: 0, 
+    neutral: 0, 
+    sad: 0, 
+    surprise: 0
+};
 
 //Time variables
-const timeInterval = 200;
+const timeInterval = 1000;
 let freeze = 0;
 let clocker = 0;
 let eye_tick = 0;
+let face_tick = 0;
 let ticker;
 
 function getScreenCoordinates(obj) {
@@ -143,15 +156,15 @@ function setupWebGazerVideo() {
         chrome.runtime.sendMessage({
             type: "error",
             message: 'Elemento de vídeo do WebGazer não encontrado.'
-          }, function(response) {
+        }, function (response) {
             console.log(response.message);
-          });
+        });
     }
 }
 
 function setupMicrophoneListeners() {
     navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(function(stream) {
+        .then(function (stream) {
             // Cria uma nova instância de reconhecimento de voz
             const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
             let recognition = new SpeechRecognition();
@@ -162,7 +175,7 @@ function setupMicrophoneListeners() {
             recognition.lang = 'pt-BR';
             recognition.start();
 
-            recognition.onresult = function(event) {
+            recognition.onresult = function (event) {
                 // Processa os resultados detectados e obtém a última palavra falada
                 let resultsLength = event.results.length - 1;
                 let arrayLength = event.results[resultsLength].length - 1;
@@ -173,28 +186,28 @@ function setupMicrophoneListeners() {
                     chrome.runtime.sendMessage({
                         type: "log",
                         message: saidWord
-                      }, function(response) {
+                    }, function (response) {
                         console.log(response.message);
-                      });
+                    });
                     sendMessage('voice', saidWord); // Envia a palavra falada
                 }
             };
 
-            recognition.onerror = function(event) {
+            recognition.onerror = function (event) {
                 chrome.runtime.sendMessage({
                     type: "error",
                     message: "Erro no reconhecimento de voz"
-                  }, function(response) {
+                }, function (response) {
                     console.log(response.message);
-                  });
+                });
             };
         }).catch((error) => {
             chrome.runtime.sendMessage({
                 type: "error",
                 message: "Erro ao acessar o microfone"
-              }, function(response) {
+            }, function (response) {
                 console.log(response.message);
-              });
+            });
         });
 }
 
@@ -214,17 +227,16 @@ function setupEventListeners() {
 
     browser.storage.sync.get(['camera']).then((result) => {
         if (result.camera) {
-            webgazer.begin().then(function() {
+            webgazer.begin().then(function () {
                 setupWebGazerVideo();
             });
         } else {
             chrome.runtime.sendMessage({
                 type: "error",
-                error: "CameraDisabled",
                 message: "Câmera desabilitada ou não acessível, verifique as configurações do sistema."
-              }, function(response) {
+            }, function (response) {
                 console.log(response.message);
-              });
+            });
         }
     });
 
@@ -235,9 +247,9 @@ function setupEventListeners() {
             chrome.runtime.sendMessage({
                 type: "error",
                 message: "Microfone desabilitado nas configurações ou reconhecimento de voz não suportado neste navegador."
-              }, function(response) {
+            }, function (response) {
                 console.log(response.message);
-              });
+            });
         }
     });
 }
@@ -256,47 +268,89 @@ function startAgain() {
     );
 }
 
+// Funções temporizadas
 function tick() {
     ////console.log(clocker);
-    freeze += timeInterval/1000
-    clocker += timeInterval/1000
-    eye_tick += timeInterval/1000
-    if (freeze >= 1) {
-        sendMessage('freeze')
-        freeze = 0
-    }
+    freeze += timeInterval / 1000;
+    clocker += timeInterval / 1000;
+    eye_tick += timeInterval / 1000;
+    face_tick += timeInterval / 1000;
 
-    if (eye_tick >= 1) {
+    // 3 segundos
+    if (freeze >= 3) {
+        sendMessage('freeze');
+        freeze = 0;
+    };
+
+    // 5 segundos
+    if (eye_tick >= 5) {
         eye_tick = 0;
-        webgazer.setGazeListener(function(data, elapsedTime) {
+        webgazer.setGazeListener(function (data, elapsedTime) {
             if (data == null) {
                 return;
-            }
+            };
             var xprediction = data.x; //these x coordinates are relative to the viewport
             var yprediction = data.y; //these y coordinates are relative to the viewport
             eye.x = Math.round(xprediction);
             eye.y = Math.round(yprediction);
-            sendMessage('eye')
+            sendMessage('eye');
         }).begin();
-    }
+    };
+
+    // 10 segundos
+    if (face_tick >= 10) {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(async function (stream) {
+                const video = document.createElement('video');
+                video.srcObject = stream;
+                video.play();
+
+                // Espera o vídeo estar pronto para ser exibido
+                await new Promise(resolve => video.onloadedmetadata = () => resolve());
+                // Captura o frame
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+
+                // Pode-se parar o stream se desejar
+                stream.getTracks().forEach(track => track.stop());
+                let imageDataUrl = canvas.toDataURL('image/png');
+                chrome.runtime.sendMessage({
+                    type: 'inferencia',
+                    data: imageDataUrl
+                });
+            })
+    };
 }
 
 function startTimer() {
     ticker = setInterval(tick, timeInterval)
 }
 
-
 function sendMessage(type) {
     var data = {};
     if (type == "keyboard") {
         data = keyboard;
         if (data.X == 0 && data.Y == 0) {
+            data.Id = mouse.Id;
+            data.Class = mouse.Class;
             data.X = Math.round(mouse.X);
             data.Y = Math.round(mouse.Y);
         }
     } else if (type == "voice") {
         data = voice;
         if (data.X == 0 && data.Y == 0) {
+            data.Id = mouse.Id;
+            data.Class = mouse.Class;
+            data.X = Math.round(mouse.X);
+            data.Y = Math.round(mouse.Y);
+        }
+    } else if (type == "face") {
+        data = emotion;
+        if (data.X == 0 && data.Y == 0) {
+            data.Id = mouse.Id;
+            data.Class = mouse.Class;
             data.X = Math.round(mouse.X);
             data.Y = Math.round(mouse.Y);
         }
@@ -312,7 +366,7 @@ function sendMessage(type) {
         if (type == "eye") {
             data.X = Math.round(eye.x);
             data.Y = Math.round(eye.y);
-        }
+        };
     }
     data.Time = clocker;
     data.imageName = "";
@@ -329,5 +383,31 @@ function sendMessage(type) {
     });
 
 }
+
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    if (request.type === "inferencia") {
+        if (request.sucess === true) {
+            emotion.anger = request.data[0];
+            emotion.contempt = request.data[1];
+            emotion.disgust = request.data[2];
+            emotion.fear = request.data[3];
+            emotion.happy = request.data[4];
+            emotion.neutral = request.data[5];
+            emotion.sad = request.data[6];
+            emotion.surprise = request.data[7];
+            sendMessage("face")
+        } else {
+            emotion.anger = 0;
+            emotion.contempt = 0;
+            emotion.disgust = 0;
+            emotion.fear = 0;
+            emotion.happy = 0;
+            emotion.neutral = 0;
+            emotion.sad = 0;
+            emotion.surprise = 0;
+            sendMessage("face")
+        }
+    }
+});
 
 initializeExtension();
