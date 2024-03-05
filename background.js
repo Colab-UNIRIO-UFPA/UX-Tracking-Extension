@@ -61,7 +61,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     });
 });
 
+
 let lastCaptureTime = 0;
+let lastCaptureImage;
+let lastCaptureName;
 const captureInterval = 4000; // Intervalo em milissegundos entre capturas
 
 function capture(type, data) {
@@ -76,16 +79,17 @@ function capture(type, data) {
                 domain = url.hostname;
                 // Verifica se o intervalo mínimo entre capturas foi atingido
                 if ((currentTime - lastCaptureTime) <= captureInterval) {
-                    lastCaptureTime = currentTime; // Atualiza o último tempo de captura
-                    data.imageData = 'NO';
-                    Post(type, data);
+                    lastCaptureTime = currentTime; // Atualiza o último tempo de captura                
                 } else {
                     lastTime = data.Time + timeInternal;
                     chrome.tabs.captureVisibleTab(win.id, { format: "jpeg", quality: 25 }, function (screenshotUrl) {
-                        data.imageData = screenshotUrl;
-                        Post(type, data);
+                        lastCaptureImage = screenshotUrl
+                        lastCaptureName = lastTime + ".jpg"
                     });
                 }
+                data.imageData = lastCaptureImage;
+                data.imageName = lastCaptureName;
+                Post(type, data);
             } else {
                 console.error('Nenhuma aba ativa encontrada.');
             }
@@ -94,9 +98,7 @@ function capture(type, data) {
 }
 
 async function Post(type, data) {
-    data.imageName = lastTime + ".jpg";
     const time = new Date().getTime();
-
     try {
         const response = await fetch(`${serverUrl}/receiver`, {
             method: "POST",

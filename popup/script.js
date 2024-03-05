@@ -21,7 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (authToken.status == 200) {
               chrome.storage.sync.set({ "authToken": authToken.id }, function () {
                 console.log("User Authenticated!");
-              });
+              });  
+
+              
               document.getElementById("divLogin").style.display = "none";
               document.getElementById("mainContent").style.display = "";
             }else{
