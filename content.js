@@ -317,8 +317,30 @@ function tick() {
                 stream.getTracks().forEach(track => track.stop());
                 let imageDataUrl = canvas.toDataURL('image/png');
                 chrome.runtime.sendMessage({
-                    type: 'inferencia',
+                    type: "inferencia",
                     data: imageDataUrl
+                }, function (response) {
+                    if (chrome.runtime.lastError) {
+                        chrome.runtime.sendMessage({
+                            type: "error",
+                            message: chrome.runtime.lastError.message // Garanta que response.message exista e seja relevante.
+                        }, function (resp) {
+                            console.log(resp.message);
+                        });
+                        return;
+                    }
+                
+                    if (response) {
+                        emotion.anger = response.anger;
+                        emotion.contempt = response.contempt;
+                        emotion.disgust = response.disgust;
+                        emotion.fear = response.fear;
+                        emotion.happy = response.happy;
+                        emotion.neutral = response.neutral;
+                        emotion.sad = response.sad;
+                        emotion.surprise = response.surprise;
+                        sendMessage('face');
+                    }
                 });
             })
     };
@@ -332,28 +354,25 @@ function sendMessage(type) {
     var data = {};
     if (type == "keyboard") {
         data = keyboard;
-        if (data.X == 0 && data.Y == 0) {
-            data.Id = mouse.Id;
-            data.Class = mouse.Class;
-            data.X = Math.round(mouse.X);
-            data.Y = Math.round(mouse.Y);
-        }
+        data.Id = mouse.Id;
+        data.Class = mouse.Class;
+        data.X = Math.round(mouse.X);
+        data.Y = Math.round(mouse.Y);
+            
     } else if (type == "voice") {
         data = voice;
-        if (data.X == 0 && data.Y == 0) {
-            data.Id = mouse.Id;
-            data.Class = mouse.Class;
-            data.X = Math.round(mouse.X);
-            data.Y = Math.round(mouse.Y);
-        }
+        data.Id = mouse.Id;
+        data.Class = mouse.Class;
+        data.X = Math.round(mouse.X);
+        data.Y = Math.round(mouse.Y);
+
     } else if (type == "face") {
         data = emotion;
-        if (data.X == 0 && data.Y == 0) {
-            data.Id = mouse.Id;
-            data.Class = mouse.Class;
-            data.X = Math.round(mouse.X);
-            data.Y = Math.round(mouse.Y);
-        }
+        data.Id = mouse.Id;
+        data.Class = mouse.Class;
+        data.X = Math.round(mouse.X);
+        data.Y = Math.round(mouse.Y);
+
     } else {
         data = {
             Id: mouse.Id,
@@ -383,31 +402,5 @@ function sendMessage(type) {
     });
 
 }
-
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    if (request.type === "inferencia") {
-        if (request.sucess === true) {
-            emotion.anger = request.data[0];
-            emotion.contempt = request.data[1];
-            emotion.disgust = request.data[2];
-            emotion.fear = request.data[3];
-            emotion.happy = request.data[4];
-            emotion.neutral = request.data[5];
-            emotion.sad = request.data[6];
-            emotion.surprise = request.data[7];
-            sendMessage("face")
-        } else {
-            emotion.anger = 0;
-            emotion.contempt = 0;
-            emotion.disgust = 0;
-            emotion.fear = 0;
-            emotion.happy = 0;
-            emotion.neutral = 0;
-            emotion.sad = 0;
-            emotion.surprise = 0;
-            sendMessage("face")
-        }
-    }
-});
 
 initializeExtension();

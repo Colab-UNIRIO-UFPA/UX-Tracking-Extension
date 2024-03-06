@@ -37,8 +37,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                         prepareSample();
                     } else if (request.type == "inferencia") {
                         sendFace(request.data).then(responseData => {
-                            sendResponse({success: true, type: request.type, data: responseData});
+                            responseData = JSON.parse(responseData)
+                            sendResponse(responseData);
                         });
+                        return true;
                     } else if (request.type === "error") {
                         console.error(`Erro recebido: ${request.message}`);
                         return true;
@@ -59,6 +61,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         }
 
     });
+    return true;
 });
 
 
