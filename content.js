@@ -1,53 +1,32 @@
 let pageHeight = Math.max(document.body.scrollHeight, document.body.offsetHeight);
-let overId = "";
-let overClass = "";
 let mouse = {
-    Id: "",
-    Class: "",
-    X: 0,
-    Y: 0,
-    Typed: "",
-    Time: 0
-};
-
-let voice = {
-    Id: "",
-    Class: "",
-    X: 0,
-    Y: 0,
-    Time: 0,
-    Spoken: ""
-};
-
-let eye = {
-    x: 512,
-    y: 256
+    id: "",
+    class: "",
+    x: 0,
+    y: 0,
 };
 
 let keyboard = {
-    Id: "",
-    Class: "",
-    X: 0,
-    Y: 0,
-    Typed: "",
-    Time: 0
+    id: "",
+    class: "",
+    x: 0,
+    y: 0,
+    Typed: ""
 };
 
-let emotion = {
-    Id: "",
-    Class: "",
-    X: 0,
-    Y: 0,
-    Time: 0,
-    anger: 0,
-    contempt: 0, 
-    disgust: 0, 
-    fear: 0, 
-    happy: 0, 
-    neutral: 0, 
-    sad: 0, 
-    surprise: 0
+
+// template do dicionário de interações
+let dataDict = {
+    type: [],
+    time: [],
+    class: [],
+    id: [],
+    x: [],
+    y: [],
+    value: [],
+    scroll: []
 };
+
 
 //Time variables
 const timeInterval = 1000;
@@ -55,6 +34,7 @@ let freeze = 0;
 let clocker = 0;
 let eye_tick = 0;
 let face_tick = 0;
+let send_tick = 0;
 let ticker;
 
 function getScreenCoordinates(obj) {
@@ -75,28 +55,49 @@ function getScreenCoordinates(obj) {
 
 function setupMouseListeners() {
     document.addEventListener('mousemove', (e) => {
-        mouse.X = e.pageX;
-        mouse.Y = e.pageY;
+        mouse.x = e.pageX;
+        mouse.y = e.pageY;
         freeze = 0;
-        sendMessage('move');
+        storeInter({
+            type: 'move',
+            x: mouse.x,
+            y: mouse.y,
+            id: mouse.id,
+            class: mouse.class,
+            value: null,
+        });
     });
 
     document.addEventListener('wheel', (e) => {
         mouse.id = e.target.id;
         mouse.class = e.target.className;
-        mouse.X = e.pageX;
-        mouse.Y = e.pageY;
+        mouse.x = e.pageX;
+        mouse.y = e.pageY;
         freeze = 0;
-        sendMessage('wheel');
+        storeInter({
+            type: 'wheel',
+            x: mouse.x,
+            y: mouse.y,
+            id: mouse.id,
+            class: mouse.class,
+            value: null,
+        });
     });
 
     document.addEventListener('click', (e) => {
         mouse.id = e.target.id;
         mouse.class = e.target.className;
-        mouse.X = e.pageX;
-        mouse.Y = e.pageY;
+        mouse.x = e.pageX;
+        mouse.y = e.pageY;
         freeze = 0;
-        sendMessage('click');
+        storeInter({
+            type: 'click',
+            x: mouse.x,
+            y: mouse.y,
+            id: mouse.id,
+            class: mouse.class,
+            value: null,
+        });
     });
 }
 
@@ -105,20 +106,32 @@ function setupKeyboardListeners() {
         const keyID = e.key;
         let actionTaken = false;
         if (e.key === 'Delete' || e.key === 'Backspace') { // backspace or delete
-            keyboard.Typed = keyboard.typed.slice(0, -1);
+            keyboard.Typed = keyboard.Typed.slice(0, -1);
             actionTaken = true;
         } else if (e.key === 'Enter') { // enter
-            sendMessage('keyboard');
-            keyboard.Typed = '';
             keyboard.id = e.target.id;
             keyboard.class = e.target.className;
+            storeInter({
+                type: 'keyboard',
+                x: mouse.x,
+                y: mouse.y,
+                id: keyboard.id,
+                class: keyboard.class,
+                value: { key: keyboard.Typed },
+            });
+            keyboard.Typed = '';
             actionTaken = true;
         }
         if (actionTaken) {
             const obj = getScreenCoordinates(e.target);
-            keyboard.X = Math.round(obj.x);
-            keyboard.Y = Math.round(obj.y);
-            sendMessage('keyboard');
+            storeInter({
+                type: 'keyboard',
+                x: Math.round(obj.x),
+                y: Math.round(obj.y),
+                id: keyboard.id,
+                class: keyboard.class,
+                value: { key: keyboard.Typed },
+            });
         }
     });
 
@@ -128,14 +141,18 @@ function setupKeyboardListeners() {
         keyboard.Typed += char;
 
         if (e.target.id !== keyboard.id) {
-            sendMessage('keyboard');
+            storeInter({
+                type: 'keyboard',
+                x: Math.round(obj.x),
+                y: Math.round(obj.y),
+                id: keyboard.id,
+                class: keyboard.class,
+                value: { key: keyboard.Typed },
+            });
             keyboard.Typed = char; // Começa um novo texto digitado
             keyboard.id = e.target.id;
             keyboard.class = e.target.className;
         }
-
-        keyboard.X = Math.round(obj.x);
-        keyboard.Y = Math.round(obj.y);
     });
 }
 
@@ -181,22 +198,26 @@ function setupMicrophoneListeners() {
                 let arrayLength = event.results[resultsLength].length - 1;
                 let saidWord = event.results[resultsLength][arrayLength].transcript;
 
-                if (voice.Spoken !== saidWord) {
-                    voice.Spoken = saidWord;
-                    chrome.runtime.sendMessage({
-                        type: "log",
-                        message: saidWord
-                    }, function (response) {
-                        console.log(response.message);
-                    });
-                    sendMessage('voice', saidWord); // Envia a palavra falada
-                }
+                storeInter({
+                    type: 'voice',
+                    x: mouse.x,
+                    y: mouse.y,
+                    class: mouse.class,
+                    id: mouse.id,
+                    value: { text: saidWord },
+                });
+                chrome.runtime.sendMessage({
+                    type: "log",
+                    message: saidWord
+                }, function (response) {
+                    console.log(response.message);
+                });
             };
 
             recognition.onerror = function (event) {
                 chrome.runtime.sendMessage({
                     type: "error",
-                    message: "Erro no reconhecimento de voz"
+                    message: "Erro no reconhecimento de voz" + event.error
                 }, function (response) {
                     console.log(response.message);
                 });
@@ -204,7 +225,7 @@ function setupMicrophoneListeners() {
         }).catch((error) => {
             chrome.runtime.sendMessage({
                 type: "error",
-                message: "Erro ao acessar o microfone"
+                message: "Erro ao acessar o microfone: " + error.message
             }, function (response) {
                 console.log(response.message);
             });
@@ -256,16 +277,7 @@ function setupEventListeners() {
 
 function initializeExtension() {
     setupEventListeners();
-    startAgain();
     startTimer();
-}
-
-function startAgain() {
-    chrome.runtime.sendMessage(
-        {
-            type: "solicita"
-        }
-    );
 }
 
 // Funções temporizadas
@@ -275,15 +287,23 @@ function tick() {
     clocker += timeInterval / 1000;
     eye_tick += timeInterval / 1000;
     face_tick += timeInterval / 1000;
+    send_tick += timeInterval / 1000;
 
     // 3 segundos
     if (freeze >= 3) {
-        sendMessage('freeze');
+        storeInter({
+            type: 'freeze',
+            x: mouse.x,
+            y: mouse.y,
+            class: mouse.class,
+            id: mouse.id,
+            value: null,
+        });
         freeze = 0;
     };
 
-    // 5 segundos
-    if (eye_tick >= 5) {
+    // 2 segundos
+    if (eye_tick >= 2) {
         eye_tick = 0;
         webgazer.setGazeListener(function (data, elapsedTime) {
             if (data == null) {
@@ -291,9 +311,14 @@ function tick() {
             };
             var xprediction = data.x; //these x coordinates are relative to the viewport
             var yprediction = data.y; //these y coordinates are relative to the viewport
-            eye.x = Math.round(xprediction);
-            eye.y = Math.round(yprediction);
-            sendMessage('eye');
+            storeInter({
+                type: 'eye',
+                x: Math.round(xprediction),
+                y: Math.round(yprediction),
+                class: mouse.class,
+                id: mouse.id,
+                value: null,
+            });
         }).begin();
     };
 
@@ -323,84 +348,65 @@ function tick() {
                     if (chrome.runtime.lastError) {
                         chrome.runtime.sendMessage({
                             type: "error",
-                            message: chrome.runtime.lastError.message // Garanta que response.message exista e seja relevante.
+                            message: chrome.runtime.lastError.message
                         }, function (resp) {
                             console.log(resp.message);
                         });
                         return;
                     }
-                
+
                     if (response) {
-                        emotion.anger = response.anger;
-                        emotion.contempt = response.contempt;
-                        emotion.disgust = response.disgust;
-                        emotion.fear = response.fear;
-                        emotion.happy = response.happy;
-                        emotion.neutral = response.neutral;
-                        emotion.sad = response.sad;
-                        emotion.surprise = response.surprise;
-                        sendMessage('face');
+                        storeInter({
+                            type: 'face',
+                            x: mouse.x,
+                            y: mouse.y,
+                            class: mouse.class,
+                            id: mouse.id,
+                            value: {
+                                anger: response.anger,
+                                contempt: response.contempt,
+                                disgust: response.disgust,
+                                fear: response.fear,
+                                happy: response.happy,
+                                neutral: response.neutral,
+                                sad: response.sad,
+                                surprise: response.surprise
+                            },
+                        });
                     }
+
+                    face_tick = 0;
                 });
             })
     };
+
+    // 4 segundos
+    if (send_tick >= 4) {
+        chrome.runtime.sendMessage({
+            type: 'sendData',
+            data: dataDict,
+            pageHeight: pageHeight
+        });
+        // clear dataDict
+        for (var key in dataDict) {
+            dataDict[key] = [];
+        }
+        send_tick = 0;
+    }
+
 }
 
 function startTimer() {
     ticker = setInterval(tick, timeInterval)
 }
 
-function sendMessage(type) {
-    var data = {};
-    if (type == "keyboard") {
-        data = keyboard;
-        data.Id = mouse.Id;
-        data.Class = mouse.Class;
-        data.X = Math.round(mouse.X);
-        data.Y = Math.round(mouse.Y);
-            
-    } else if (type == "voice") {
-        data = voice;
-        data.Id = mouse.Id;
-        data.Class = mouse.Class;
-        data.X = Math.round(mouse.X);
-        data.Y = Math.round(mouse.Y);
-
-    } else if (type == "face") {
-        data = emotion;
-        data.Id = mouse.Id;
-        data.Class = mouse.Class;
-        data.X = Math.round(mouse.X);
-        data.Y = Math.round(mouse.Y);
-
-    } else {
-        data = {
-            Id: mouse.Id,
-            Class: mouse.Class,
-            X: mouse.X,
-            Y: mouse.Y,
-            Typed: mouse.Typed,
-            Time: mouse.Time
-        };
-        if (type == "eye") {
-            data.X = Math.round(eye.x);
-            data.Y = Math.round(eye.y);
-        };
-    }
-    data.Time = clocker;
-    data.imageName = "";
-    data.pageHeight = Math.round(pageHeight);
-    data.pageScroll = Math.round(document.documentElement.scrollTop);
-    data.url = document.URL;
-    data.mouseId = overId;
-    data.mouseClass = overClass;
-    //data.Typed = data.Typed.replace(/(?:\r\n|\r|\n)/g, " - ");
-    //console.log("message send "+type);
-    chrome.runtime.sendMessage({
-        type: type,
-        data: data
-    });
-
+function storeInter(interDict) {
+    interDict.time = clocker;
+    interDict.scroll = Math.round(document.documentElement.scrollTop);
+    // verifica as chaves do dicionário de interações
+    for (var key in interDict) {
+        dataDict[key].push(interDict[key]); // Adiciona o novo valor à chave correspondente
+    };
 }
 
 initializeExtension();

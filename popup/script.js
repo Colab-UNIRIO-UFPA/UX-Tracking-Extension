@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const username = $("#username").val();
         const password = $("#password").val();
 
-        $.post("https://uxtracking.andrepereira.eng.br/external/userAuth",
+        $.post("http://localhost:5000/external/userAuth",
           {
             username: username,
             password: password
@@ -21,12 +21,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (authToken.status == 200) {
               chrome.storage.sync.set({ "authToken": authToken.id }, function () {
                 console.log("User Authenticated!");
-              });  
+              });
 
-              
+
               document.getElementById("divLogin").style.display = "none";
               document.getElementById("mainContent").style.display = "";
-            }else{
+            } else {
               var divExist = document.getElementById('errorLogin');
               if (divExist) {
                 // Se a div existir, remova-a
@@ -108,10 +108,10 @@ function notification() {
     message: 'Faça o login para iniciar a captura!\nClique no botão abaixo ou abra o menu da extensão.',
     buttons: [{ title: 'Fazer login' }]
   };
-  
-  chrome.notifications.create('loginNotification', options, function(notificationId) {
+
+  chrome.notifications.create('loginNotification', options, function (notificationId) {
     // Define um ouvinte para o clique na notificação
-    chrome.notifications.onButtonClicked.addListener(function(clickedNotificationId, buttonIndex) {
+    chrome.notifications.onButtonClicked.addListener(function (clickedNotificationId, buttonIndex) {
       if (clickedNotificationId === 'loginNotification' && buttonIndex === 0) {
         // Abre a popup da extensão quando o usuário clica no botão "Fazer Login"
         chrome.windows.create({

@@ -34,8 +34,9 @@
     "activeTab",
     "storage",
     "tabs",
-    "notifications"
+    "notifications",
+    "downloads",
+    "scripting"
   ],
-  "web_accessible_resources": [],
   "host_permissions": ["<all_urls>"]
 }

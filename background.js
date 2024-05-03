@@ -1,18 +1,8 @@
-const serverUrl = "https://uxtracking.andrepereira.eng.br/external";
+//const serverUrl = "https://uxtracking.andrepereira.eng.br/external";
+const serverUrl = "http://localhost:5000/external";
 
 // Cria um objeto Date com a data e hora atuais
-var dataHoraAtual = new Date();
-
-// Extrai as partes da data e hora que queremos incluir no index
-var ano = dataHoraAtual.getFullYear();
-var mes = ("0" + (dataHoraAtual.getMonth() + 1)).slice(-2);
-var dia = ("0" + dataHoraAtual.getDate()).slice(-2);
-var hora = ("0" + dataHoraAtual.getHours()).slice(-2);
-var minuto = ("0" + dataHoraAtual.getMinutes()).slice(-2);
-var segundo = ("0" + dataHoraAtual.getSeconds()).slice(-2);
-
-// Cria a string de index no formato YYYYMMDD-HHMMSS
-var dateTime = ano + mes + dia + "-" + hora + minuto + segundo;
+var datetime = new Date();
 var timeInternal = 0;
 var userId = '';
 var domain = "";
@@ -33,9 +23,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             userId = data.authToken;
             chrome.storage.sync.get(['record']).then((result) => {
                 if (result && result.record) {
-                    if (request.type == "solicita") {
-                        prepareSample();
-                    } else if (request.type == "inferencia") {
+                    if (request.type == "inferencia") {
                         sendFace(request.data).then(responseData => {
                             responseData = JSON.parse(responseData)
                             sendResponse(responseData);
@@ -47,8 +35,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                     } else if (request.type === "log") {
                         console.error(`Log recebido: ${request.message}`);
                         return true;
-                    } else {
-                        capture(request.type, request.data);
+                    } else if (request.type === "sendData") {
+                        capture(request.data, request.pageHeight);
                     }
                 }
             });
@@ -57,21 +45,14 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                 notification();
                 console.log('User ID is not set.');
             }
-            setInterval(updateInterval(), 1000)
+            setInterval(updateInterval, 1000)
         }
 
     });
     return true;
 });
 
-
-let lastCaptureTime = 0;
-let lastCaptureImage;
-let lastCaptureName;
-const captureInterval = 4000; // Intervalo em milissegundos entre capturas
-
-function capture(type, data) {
-    const currentTime = Date.now();
+function capture(data, pageHeight) {
     chrome.windows.getCurrent(function (win) {
         chrome.tabs.query({
             active: true,
@@ -79,20 +60,25 @@ function capture(type, data) {
         }, function (tabs) {
             if (tabs && tabs[0] && tabs[0].url) {
                 var url = new URL(tabs[0].url);
-                domain = url.hostname;
-                // Verifica se o intervalo mínimo entre capturas foi atingido
-                if ((currentTime - lastCaptureTime) <= captureInterval) {
-                    lastCaptureTime = currentTime; // Atualiza o último tempo de captura                
-                } else {
-                    lastTime = data.Time + timeInternal;
-                    chrome.tabs.captureVisibleTab(win.id, { format: "jpeg", quality: 25 }, function (screenshotUrl) {
-                        lastCaptureImage = screenshotUrl
-                        lastCaptureName = lastTime + ".jpg"
-                    });
-                }
-                data.imageData = lastCaptureImage;
-                data.imageName = lastCaptureName;
-                Post(type, data);
+                var domain = url.hostname;
+                chrome.tabs.captureVisibleTab(win.id, { format: "jpeg", quality: 25 }, function (screenshotUrl) {
+                    if (chrome.runtime.lastError || !screenshotUrl) {
+                        console.error('Erro ao capturar a tela: ', chrome.runtime.lastError?.message);
+                        return;
+                    }
+                    console.log('Data: ', data);
+                    var content = {
+                        data: data,
+                        metadata: {
+                            userID: userId,
+                            dateTime: datetime,
+                            image: screenshotUrl,
+                            height: pageHeight,
+                            site: domain
+                        }
+                    }
+                    Post(content);
+                });
             } else {
                 console.error('Nenhuma aba ativa encontrada.');
             }
@@ -100,37 +86,24 @@ function capture(type, data) {
     });
 }
 
-async function Post(type, data) {
-    const time = new Date().getTime();
+async function Post(content) {
     try {
         const response = await fetch(`${serverUrl}/receiver`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
+                "Content-Type": "application/json"
             },
-            body: new URLSearchParams({
-                metadata: JSON.stringify({
-                    dateTime: dateTime,
-                    sample: domain,
-                    userId: userId,
-                    type: type,
-                    time: Math.round(Date.now() / 1000) - timeInitial,
-                    scroll: data.pageScroll,
-                    height: data.pageHeight,
-                    url: data.url
-                }),
-                data: JSON.stringify(data)
-            })
+            body: JSON.stringify(content)
         });
 
         if (response.ok) {
             const responseData = await response.text();
-            console.log(type + " " + responseData);
+            console.log(responseData);
         } else {
-            console.error(type + " Request failed with status:", response.status);
+            console.error("Request failed with status:", response.status);
         }
     } catch (error) {
-        console.error(type + " An error occurred:", error);
+        console.error("An error occurred:", error);
     }
 }
 
@@ -152,50 +125,6 @@ async function sendFace(image) {
         console.error(" An error occurred:", error);
         throw error;
     }
-}
-
-function prepareSample() {
-    chrome.storage.sync.get(["userid"], function (items) {
-        var loadedId = items.userid;
-        function useToken(userid) {
-            userId = userid;
-            chrome.tabs.query({
-                active: true,
-                lastFocusedWindow: true
-            }, async function (tabs) {
-                var url = new URL(tabs[0].url);
-                domain = url.hostname;
-
-                try {
-                    const response = await fetch(`${serverUrl}/sample_checker`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({ userId: userid, domain: domain, dateTime: dateTime })
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        timeInternal = parseInt(data);
-                    } else {
-                        console.error("Request failed with status:", response.status);
-                    }
-                } catch (error) {
-                    console.error("An error occurred:", error);
-                }
-            });
-        }
-        if (loadedId !== null && loadedId !== "" && typeof loadedId !== 'undefined') {
-            useToken(loadedId);
-        }
-        else {
-            chrome.storage.sync.set({ 'userid': userId }, function () {
-                // Notify that we saved.
-                useToken(loadedId);
-            });
-        }
-    });
 }
 
 function notification() {
