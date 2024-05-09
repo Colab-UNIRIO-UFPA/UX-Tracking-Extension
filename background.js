@@ -15,42 +15,46 @@ var popupInterval = 0;
 
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    function updateInterval() {
-        popupInterval += 1000;
-    }
-    chrome.storage.sync.get('authToken', function (data) {
+    chrome.storage.sync.get(['authToken', 'record'], function (data) {
         if (data.authToken) {
             userId = data.authToken;
-            chrome.storage.sync.get(['record']).then((result) => {
-                if (result && result.record) {
-                    if (request.type == "inferencia") {
-                        sendFace(request.data).then(responseData => {
-                            responseData = JSON.parse(responseData)
-                            sendResponse(responseData);
-                        });
-                        return true;
-                    } else if (request.type === "error") {
-                        console.error(`Erro recebido: ${request.message}`);
-                        return true;
-                    } else if (request.type === "log") {
-                        console.error(`Log recebido: ${request.message}`);
-                        return true;
-                    } else if (request.type === "sendData") {
-                        capture(request.data, request.pageHeight);
-                    }
-                }
-            });
-        } else {
-            if (popupInterval >= 30000) {
-                notification();
-                console.log('User ID is not set.');
+            if (data.record) {
+                handleRequest(request, sendResponse);
             }
-            setInterval(updateInterval, 1000)
+        } else {
+            handleNoAuthToken();
         }
-
     });
-    return true;
+    return true; // Para tratamento assíncrono de sendResponse
 });
+
+function handleRequest(request, sendResponse) {
+    switch (request.type) {
+        case "inferencia":
+            sendFace(request.data)
+                .then(responseData => sendResponse(JSON.parse(responseData)))
+                .catch(error => console.error("Erro no reconhecimento facial: ", error));
+            return true; // Mantém sendResponse ativo
+        case "error":
+            console.error(`Erro recebido: ${request.message}`);
+            break;
+        case "log":
+            console.error(`Log recebido: ${request.message}`);
+            break;
+        case "sendData":
+            capture(request.data, request.pageHeight);
+            break;
+    }
+}
+
+function handleNoAuthToken() {
+    if (popupInterval >= 30000) {
+        notifyLoginRequired();
+        console.log('User ID is not set.');
+        popupInterval = 0; // Reset interval
+    }
+    popupInterval += 1000;
+}
 
 function capture(data, pageHeight) {
     chrome.windows.getCurrent(function (win) {
@@ -66,7 +70,6 @@ function capture(data, pageHeight) {
                         console.error('Erro ao capturar a tela: ', chrome.runtime.lastError?.message);
                         return;
                     }
-                    console.log('Data: ', data);
                     var content = {
                         data: data,
                         metadata: {
@@ -77,7 +80,7 @@ function capture(data, pageHeight) {
                             site: domain
                         }
                     }
-                    Post(content);
+                    post(content);
                 });
             } else {
                 console.error('Nenhuma aba ativa encontrada.');
@@ -86,68 +89,43 @@ function capture(data, pageHeight) {
     });
 }
 
-async function Post(content) {
+async function post(content) {
     try {
         const response = await fetch(`${serverUrl}/receiver`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(content)
         });
-
-        if (response.ok) {
-            const responseData = await response.text();
-            console.log(responseData);
-        } else {
-            console.error("Request failed with status:", response.status);
-        }
+        console.log("Response Status:", response.status, await response.text());
     } catch (error) {
-        console.error("An error occurred:", error);
+        console.error("Erro ao enviar dados para o servidor:", error);
     }
 }
 
 async function sendFace(image) {
-    try {
-        const response = await fetch(`${serverUrl}/faceExpression`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            body: new URLSearchParams({
-                data: image
-            })
-        });
-
-        const responseData = await response.text();
-        return responseData;
-    } catch (error) {
-        console.error(" An error occurred:", error);
-        throw error;
-    }
+    const response = await fetch(`${serverUrl}/faceExpression`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ data: image })
+    });
+    return response.text();
 }
 
-function notification() {
+function notifyLoginRequired() {
     var options = {
         type: 'basic',
         iconUrl: 'logo.png',
         title: 'UX-Tracking: Login necessário!',
-        message: 'Faça o login para iniciar a captura!\nClique no botão abaixo ou abra o menu da extensão.',
+        message: 'Faça o login para iniciar a captura!',
         buttons: [{ title: 'Fazer login' }]
     };
-
-    chrome.notifications.create('loginNotification', options, function (notificationId) {
-        // Define um ouvinte para o clique na notificação
-        chrome.notifications.onButtonClicked.addListener(function (clickedNotificationId, buttonIndex) {
-            if (clickedNotificationId === 'loginNotification' && buttonIndex === 0) {
-                // Abre a popup da extensão quando o usuário clica no botão "Fazer Login"
-                chrome.windows.create({
-                    url: 'popup/index.html', // Substitua pelo URL da sua popup HTML
-                    type: 'popup',
-                    width: 300,
-                    height: 350
-                });
+    chrome.notifications.create('loginNotification', options, function () {
+        chrome.notifications.onButtonClicked.addListener(function (notificationId, buttonIndex) {
+            if (notificationId === 'loginNotification' && buttonIndex === 0) {
+                chrome.windows.create({ url: 'popup/index.html', type: 'popup', width: 300, height: 350 });
             }
         });
     });
 }
+
+setInterval(() => popupInterval += 1000, 1000);
