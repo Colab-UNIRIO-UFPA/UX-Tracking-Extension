@@ -1,6 +1,13 @@
 // Obter a altura da página
 const pageHeight = Math.max(document.body.scrollHeight, document.body.offsetHeight);
 
+// Injetar o iframe na página
+const iframe = document.createElement('iframe');
+iframe.src = chrome.runtime.getURL('iframe.html');
+iframe.style.display = 'none';
+iframe.allow = 'microphone; camera';
+document.body.appendChild(iframe);
+
 // Inicializar variáveis de mouse e teclado
 let mouse = { id: "", class: "", x: 0, y: 0 };
 let keyboard = { id: "", class: "", x: 0, y: 0, Typed: "" };
@@ -121,30 +128,30 @@ function setupWebGazerVideo() {
 
 // Configurar ouvintes de microfone
 function setupMicrophoneListeners() {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-            const recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
-            recognition.continuous = true;
-            recognition.interimResults = false;
-            recognition.lang = 'pt-BR';
-            recognition.start();
+    // Solicitar início da captura de áudio
+    iframe.onload = () => {
+        iframe.contentWindow.postMessage({ action: 'startAudioCapture' }, '*');
+    };
+    // Receber os dados de áudio do iframe
+    window.addEventListener('message', (event) => {
+        if (event.data.action === 'error') {
+            console.error(`Erro na captura de áudio: ${event.data.data}`);
+        } else if (event.data.action === 'audioResult') {
+            const saidWords = event.data.data; // Array de transcrições
+            const combinedTranscript = saidWords.map(saidWord => saidWord.transcript).join(' ');
 
-            recognition.onresult = event => {
-                const saidWord = event.results[event.results.length - 1][0].transcript;
-                storeInter({
-                    type: 'voice',
-                    x: mouse.x,
-                    y: mouse.y,
-                    class: mouse.class,
-                    id: mouse.id,
-                    value: { text: saidWord },
-                });
-            };
-
-            recognition.onerror = event => console.error("Erro no reconhecimento de voz: " + event.error);
-        })
-        .catch(error => console.error("Erro ao acessar o microfone: " + error.message));
+            storeInter({
+                type: 'voice',
+                x: mouse.x,
+                y: mouse.y,
+                class: mouse.class,
+                id: mouse.id,
+                value: { text: combinedTranscript },
+            });
+        }
+    });
 }
+
 
 // Configurar ouvintes de eventos
 function setupEventListeners() {
@@ -177,7 +184,7 @@ function tick() {
     face_tick += timeInterval / 1000;
     send_tick += timeInterval / 1000;
 
-    if (freeze >= 3) {
+    if (freeze >= 10) {
         storeInter({ type: 'freeze', x: mouse.x, y: mouse.y, id: mouse.id, class: mouse.class, value: null });
         freeze = 0;
     }
@@ -192,18 +199,10 @@ function tick() {
     }
 
     if (face_tick >= 10) {
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(async stream => {
-                const video = document.createElement('video');
-                video.srcObject = stream;
-                video.play();
-                await new Promise(resolve => video.onloadedmetadata = resolve);
-                const canvas = document.createElement('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                canvas.getContext('2d').drawImage(video, 0, 0);
-                stream.getTracks().forEach(track => track.stop());
-                const imageDataUrl = canvas.toDataURL('image/png');
+        iframe.contentWindow.postMessage({ action: 'captureUserImage' }, '*');
+        window.addEventListener('message', (event) => {
+            if (event.data.action === 'userImageResult') { 
+                imageDataUrl = event.data.data;
                 chrome.runtime.sendMessage({ type: "inferencia", data: imageDataUrl }, response => {
                     if (response) {
                         storeInter({
@@ -216,8 +215,10 @@ function tick() {
                         });
                     }
                 });
-                face_tick = 0;
-            });
+            }
+        });
+        
+        face_tick = 0;
     }
 
     if (send_tick >= 4) {
