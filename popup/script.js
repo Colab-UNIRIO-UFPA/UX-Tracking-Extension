@@ -124,3 +124,20 @@ function notification() {
     });
   });
 }
+
+let btnlgout = document.getElementById('logout');
+
+btnlgout.addEventListener('click', function(){
+
+    $.get("http://localhost:5000/external/userLogout", function(authToken){
+      if (authToken.status == 200){
+        chrome.storage.sync.remove("authToken", function (){
+        console.log("logout sucessfully")
+        });
+
+        document.getElementById("divLogin").style.display = "";
+        document.getElementById("mainContent").style.display = "none";
+
+      }
+    })  
+  })
